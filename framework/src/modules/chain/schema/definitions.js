@@ -192,6 +192,16 @@ module.exports = {
 						example: 123,
 						minimum: 1,
 					},
+					heightPrevoted: {
+						type: 'integer',
+						example: 123,
+						minimum: 0,
+					},
+					heightPrevious: {
+						type: 'integer',
+						example: 123,
+						minimum: 0,
+					},
 					timestamp: {
 						description: 'Unix Timestamp',
 						type: 'integer',

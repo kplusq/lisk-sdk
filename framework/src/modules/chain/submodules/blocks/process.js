@@ -332,6 +332,8 @@ class Process {
 					timestamp,
 					previousBlock: modules.blocks.lastBlock.get(),
 					transactions: readyTransactions,
+					heightPrevoted: 1,
+					heightPrevious: 1,
 				});
 				// Start block processing - broadcast: true, saveBlock: true
 				return modules.blocks.verify.processBlock(block, true, true, cb);

@@ -140,8 +140,13 @@ class Block {
 			previousBlock: data.previousBlock.id,
 			generatorPublicKey: data.keypair.publicKey.toString('hex'),
 			transactions: blockTransactions,
+			heightPrevious: data.heightPrevious,
+			heightPrevoted: data.heightPrevoted,
 		};
 
+		console.log('hier');
+		console.log('\n\n\n\n');
+		console.log(block);
 		try {
 			block.blockSignature = this.sign(block, data.keypair);
 
@@ -281,6 +286,9 @@ class Block {
 		const capacity =
 			4 + // version (int)
 			4 + // timestamp (int)
+			32 + // height (int)
+			32 + // heightPrevious (int)
+			32 + // heighhtPrevoted (int)
 			8 + // previousBlock
 			4 + // numberOfTransactions (int)
 			8 + // totalAmount (long)
@@ -297,6 +305,9 @@ class Block {
 			const byteBuffer = new ByteBuffer(capacity, true);
 			byteBuffer.writeInt(block.version);
 			byteBuffer.writeInt(block.timestamp);
+			byteBuffer.writeInt(block.height);
+			byteBuffer.writeInt(block.heightPrevious);
+			byteBuffer.writeInt(block.heightPrevoted);
 
 			if (block.previousBlock) {
 				const pb = new Bignum(block.previousBlock).toBuffer({ size: '8' });
@@ -388,6 +399,7 @@ class Block {
 	 * @returns {null|block} Block object
 	 * @todo Add description for the params
 	 */
+	// TODO: Check if method is still needed
 	// eslint-disable-next-line class-methods-use-this
 	dbRead(raw) {
 		if (!raw.b_id) {
@@ -398,6 +410,8 @@ class Block {
 			version: parseInt(raw.b_version),
 			timestamp: parseInt(raw.b_timestamp),
 			height: parseInt(raw.b_height),
+			heightPrevious: 0,
+			heightPrevoted: 0,
 			previousBlock: raw.b_previousBlock,
 			numberOfTransactions: parseInt(raw.b_numberOfTransactions),
 			totalAmount: new Bignum(raw.b_totalAmount),
@@ -431,6 +445,8 @@ class Block {
 			version: parseInt(raw.version),
 			timestamp: parseInt(raw.timestamp),
 			height: parseInt(raw.height),
+			heightPrevious: parseInt(raw.heightPrevious),
+			heightPrevoted: parseInt(raw.heightPrevoted),
 			previousBlock: raw.previousBlockId,
 			numberOfTransactions: parseInt(raw.numberOfTransactions),
 			totalAmount: new Bignum(raw.totalAmount),
@@ -459,6 +475,8 @@ class Block {
 	 * @typedef {Object} block
 	 * @property {string} id - Between 1 and 20 chars
 	 * @property {number} height
+	 * @property {number} heightPrevious
+	 * @property {number} heightPrevoted
 	 * @property {signature} blockSignature
 	 * @property {publicKey} generatorPublicKey
 	 * @property {number} numberOfTransactions
@@ -484,6 +502,12 @@ class Block {
 					maxLength: 20,
 				},
 				height: {
+					type: 'integer',
+				},
+				heightPrevious: {
+					type: 'integer',
+				},
+				heightPrevoted: {
 					type: 'integer',
 				},
 				blockSignature: {
@@ -535,6 +559,8 @@ class Block {
 				},
 			},
 			required: [
+				'heightPrevious',
+				'heightPrevoted',
 				'blockSignature',
 				'generatorPublicKey',
 				'numberOfTransactions',
