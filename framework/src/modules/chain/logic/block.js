@@ -140,6 +140,7 @@ class Block {
 			previousBlock: data.previousBlock.id,
 			generatorPublicKey: data.keypair.publicKey.toString('hex'),
 			transactions: blockTransactions,
+			height: data.height,
 			heightPrevious: data.heightPrevious,
 			heightPrevoted: data.heightPrevoted,
 		};
