@@ -21,6 +21,8 @@ SELECT
 	"totalFee",
 	"reward",
 	"payloadLength",
+	"heightPrevious",
+	"heightPrevoted",
 	"previousBlock" as "previousBlockId",
 	"numberOfTransactions",
 	"totalAmount",

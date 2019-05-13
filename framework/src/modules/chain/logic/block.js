@@ -144,9 +144,6 @@ class Block {
 			heightPrevoted: data.heightPrevoted,
 		};
 
-		console.log('hier');
-		console.log('\n\n\n\n');
-		console.log(block);
 		try {
 			block.blockSignature = this.sign(block, data.keypair);
 
@@ -286,9 +283,9 @@ class Block {
 		const capacity =
 			4 + // version (int)
 			4 + // timestamp (int)
-			32 + // height (int)
-			32 + // heightPrevious (int)
-			32 + // heighhtPrevoted (int)
+			4 + // height (int)
+			4 + // heightPrevious (int)
+			4 + // heightPrevoted (int)
 			8 + // previousBlock
 			4 + // numberOfTransactions (int)
 			8 + // totalAmount (long)
@@ -300,7 +297,6 @@ class Block {
 			64 + // blockSignature or unused
 			4; // unused
 		let bytes;
-
 		try {
 			const byteBuffer = new ByteBuffer(capacity, true);
 			byteBuffer.writeInt(block.version);
@@ -410,8 +406,8 @@ class Block {
 			version: parseInt(raw.b_version),
 			timestamp: parseInt(raw.b_timestamp),
 			height: parseInt(raw.b_height),
-			heightPrevious: 0,
-			heightPrevoted: 0,
+			heightPrevious: parseInt(raw.b_heightPrevious),
+			heightPrevoted: parseInt(raw.b_heightPrevoted),
 			previousBlock: raw.b_previousBlock,
 			numberOfTransactions: parseInt(raw.b_numberOfTransactions),
 			totalAmount: new Bignum(raw.b_totalAmount),

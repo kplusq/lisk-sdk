@@ -327,14 +327,17 @@ class Process {
 				);
 
 				// Create a block
+				const lastBlock = modules.blocks.lastBlock.get();
 				const block = library.logic.block.create({
 					keypair,
 					timestamp,
-					previousBlock: modules.blocks.lastBlock.get(),
+					previousBlock: lastBlock,
 					transactions: readyTransactions,
 					heightPrevoted: 1,
 					heightPrevious: 1,
+					height: lastBlock.height + 1,
 				});
+
 				// Start block processing - broadcast: true, saveBlock: true
 				return modules.blocks.verify.processBlock(block, true, true, cb);
 			})

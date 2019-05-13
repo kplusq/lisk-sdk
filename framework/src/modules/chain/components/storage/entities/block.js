@@ -26,6 +26,8 @@ const defaultCreateValues = {};
 const createFields = [
 	'id',
 	'height',
+	'heightPrevious',
+	'heightPrevoted',
 	'blockSignature',
 	'generatorPublicKey',
 	'payloadHash',
@@ -56,10 +58,10 @@ class ChainBlock extends BlockEntity {
 
 		this.sqlDirectory = path.join(path.dirname(__filename), '../sql');
 
-		const cutomSQLs = this.loadSQLFiles('blocks', sqlFiles, this.sqlDirectory);
+		const customSQLs = this.loadSQLFiles('blocks', sqlFiles, this.sqlDirectory);
 		this.SQLs = {
 			...this.SQLs,
-			...cutomSQLs,
+			...customSQLs,
 		};
 	}
 

@@ -119,8 +119,6 @@ class Chain {
 	 */
 	// eslint-disable-next-line class-methods-use-this
 	saveBlock(block, cb, tx) {
-		console.log(block);
-		console.log('-==================-\n\n\n\n\n\n\n\n\n');
 		// Parse block data to storage module
 		const parsedBlock = _.cloneDeep(block);
 		if (parsedBlock.reward) {
