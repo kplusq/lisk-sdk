@@ -17,6 +17,7 @@
 const _ = require('lodash');
 const async = require('async');
 const { Status: TransactionStatus } = require('@liskhq/lisk-transactions');
+const { promisify } = require('util');
 const { convertErrorsToString } = require('../../helpers/error_handlers');
 const slots = require('../../helpers/slots');
 const definitions = require('../../schema/definitions');
@@ -28,6 +29,7 @@ const __private = {};
 let modules;
 let library;
 let self;
+let deleteLastBlock;
 
 /**
  * Main process logic. Allows process blocks. Initializes library.
@@ -367,7 +369,13 @@ class Process {
 			);
 		}
 
-		// Execute in sequence via sequence
+		// New block version, different onReceiveBlock implementation
+		if (block.version === 1) {
+			// TODO: Remove hard coding.
+			return this.onReceiveBlockV2(block);
+		}
+
+		// Execute in sequence via sequence. TODO: Remove after compatibility window is over.
 		return library.sequence.add(cb => {
 			// Get the last block
 			const lastBlock = modules.blocks.lastBlock.get();
@@ -418,6 +426,27 @@ class Process {
 	}
 
 	/**
+	 * Handle newly received block.
+	 *
+	 * @listens module:transport~event:receiveBlock
+	 * @param {block} block - New block
+	 */
+	// eslint-disable-next-line class-methods-use-this
+	onReceiveBlockV2(block) {
+		// TODO: Remove V2 after compatibility window is over.
+		// Current slot number based on current time since LiskEpoch ~ Slot number at the time the new block is received
+		// Better to do it here rather than in the Sequence so reciving time is more accurate
+		const newBlockReceivedAtSlot = slots.getSlotNumber();
+
+		// Execute in sequence via sequence
+		return library.sequence.add(callback => {
+			this._onReceiveBlockTask(block, newBlockReceivedAtSlot)
+				.then(result => callback(null, result))
+				.catch(error => callback(error));
+		});
+	}
+
+	/**
 	 * Handle modules initialization
 	 * - accounts
 	 * - blocks
@@ -444,10 +473,191 @@ class Process {
 			processTransactions: scope.modules.processTransactions,
 		};
 
+		deleteLastBlock = promisify(modules.blocks.chain.deleteLastBlock);
+
 		// Set module as loaded
 		__private.loaded = true;
 	}
+
+	/**
+	 * Wrap of onReceiveBlock logic so it can be added to Sequence and properly tested
+	 * @param block
+	 * @param newBlockReceivedAtSlot - Slot number when the block was received
+	 * @return {Promise}
+	 * @private
+	 */
+	async _onReceiveBlockTask(block, newBlockReceivedAtSlot) {
+		const lastBlock = modules.blocks.lastBlock.get();
+		const lastBlockReceivedAtSlot = slots.getSlotNumber(
+			slots.getTime(modules.blocks.lastReceipt.get() * 1000)
+		); // Slot number when lastBlock was received.
+
+		const forgingSlotLastBlock = slots.getSlotNumber(lastBlock.timestamp);
+		const forgingSlotNewBlock = slots.getSlotNumber(block.timestamp);
+
+		if (lastBlock.id === block.id) {
+			// Case 1: same block received twice
+			return this._handleSameBlockReceived(block);
+		}
+
+		if (
+			lastBlock.height + 1 === block.height &&
+			block.previousBlock === lastBlock.id
+		) {
+			// Case 2: correct block received
+			return this._handleGoodBlock(block);
+		}
+
+		if (
+			lastBlock.height === block.height &&
+			lastBlock.heightPrevoted === block.heightPrevoted &&
+			lastBlock.previousBlock === block.previousBlock
+		) {
+			// Delegates are the same
+			if (lastBlock.generatorPublicKey === block.generatorPublicKey) {
+				// Case 3: double forging. Last Block stands.
+				return this._handleDoubleForging(block);
+			}
+
+			// Delegates are different
+			if (
+				forgingSlotLastBlock < forgingSlotNewBlock &&
+				!this._receivedInSlot(lastBlock, lastBlockReceivedAtSlot) &&
+				this._receivedInSlot(block, newBlockReceivedAtSlot)
+			) {
+				// Case 4: Tie break
+				return this._handleDoubleForgingTieBreak();
+			}
+		}
+
+		// Case 5: received block has priority. Move to a different chain.
+		if (
+			lastBlock.heightPrevoted < block.heightPrevoted ||
+			(lastBlock.height < block.height &&
+				lastBlock.heightPrevoted === block.heightPrevoted)
+		) {
+			return this._handleMovingToDifferentChain();
+			// TODO: Move to a different chain
+		}
+
+		// Discard newly received block
+		return true; // It has to return something.
+	}
+
+	/**
+	 * Block IDs are the same ~ Blocks are equal
+	 * @param block
+	 * @returns {*}
+	 * @private
+	 */
+	// eslint-disable-next-line class-methods-use-this
+	_handleSameBlockReceived(block) {
+		library.logger.debug('Block already processed', block.id);
+	}
+
+	/**
+	 * Block received is correct
+	 * @param block
+	 * @returns {Promise}
+	 * @private
+	 */
+	_handleGoodBlock(block) {
+		return this._processBlock(block);
+	}
+
+	/**
+	 * Double forging. Last block stands
+	 * @param block
+	 * @returns {*}
+	 * @private
+	 */
+	// eslint-disable-next-line class-methods-use-this
+	_handleDoubleForging(block) {
+		library.logger.warn(
+			'Delegate forging on multiple nodes',
+			block.generatorPublicKey
+		);
+		library.logger.info('Last block stands');
+	}
+
+	/**
+	 * Tie break of Case 3.
+	 * @param lastBlock
+	 * @param newBlock
+	 * @returns {Promise}
+	 * @private
+	 */
+	async _handleDoubleForgingTieBreak(newBlock, lastBlock) {
+		const normalizedNewBlock = library.logic.block.objectNormalize(
+			_.cloneDeep(newBlock)
+		);
+
+		await this._validateBlockSlot(normalizedNewBlock, lastBlock);
+		const check = modules.blocks.verify.verifyReceipt(normalizedNewBlock);
+
+		if (!check.verified) {
+			library.logger.error(
+				`Block ${normalizedNewBlock.id} verification failed`,
+				check.errors.join(', ')
+			);
+			// Return first error from checks
+			throw check.errors[0];
+		}
+
+		library.logger.info('Last block loses due to fork 5');
+		await deleteLastBlock();
+
+		return this._processBlock(lastBlock);
+	}
+
+	/**
+	 * Move to a different chain
+	 * @private
+	 */
+	// eslint-disable-next-line class-methods-use-this
+	_handleMovingToDifferentChain() {
+		// TODO: Move to a different chain.
+	}
+
+	/**
+	 * Update last receipt and process newly received block.
+	 * @param block
+	 * @private
+	 */
+	// eslint-disable-next-line class-methods-use-this
+	_processBlock(block) {
+		return promisify(__private.receiveBlock)(block); // TODO: Convert __private.receiveBlock to async, move implementation here to async and remove from __private.
+	}
+
+	/**
+	 * Wrapper over __privaate.validateBlockSlot. Will be removed
+	 * @param block
+	 * @param lastBlock
+	 * @return {never}
+	 * @private
+	 */
+	// eslint-disable-next-line class-methods-use-this
+	_validateBlockSlot(block, lastBlock) {
+		return promisify(__private.validateBlockSlot)(block, lastBlock); // TODO: Convert __private.validateBlockSlot to async and remove from __private.
+	}
+
+	/**
+	 * Check if block is received in the designated time window of the block slot.
+	 * @param block
+	 * @param receivedAt - Time when the block was received since Lisk's Epoch time
+	 * @return {boolean}
+	 * @private
+	 */
+	// eslint-disable-next-line class-methods-use-this
+	_receivedInSlot(block, receivedAt) {
+		return slots.timeFallsInSlot(
+			slots.getSlotNumber(block.timestamp),
+			receivedAt
+		);
+	}
 }
+
+// TODO: Remove all this functions after compatibility window is over.
 
 /**
  * Receive block - logs info about received block, updates last receipt, processes block.
@@ -467,7 +677,7 @@ __private.receiveBlock = function(block, cb) {
 	);
 
 	// Update last receipt
-	modules.blocks.lastReceipt.update();
+	modules.blocks.lastReceipt.update(); // TODO: Probably not needed anymore.
 	// Start block processing - broadcast: true, saveBlock: true
 	modules.blocks.verify.processBlock(block, true, true, cb);
 };
