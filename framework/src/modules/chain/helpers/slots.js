@@ -100,6 +100,16 @@ module.exports = {
 	},
 
 	/**
+	 * Check if timestamp is contained within a slot time
+	 * @param slot
+	 * @param time
+	 * @returns {boolean}
+	 */
+	timeFallsInSlot(slot, time) {
+		return this.getSlotNumber(time) === slot;
+	},
+
+	/**
 	 * Description of the function.
 	 *
 	 * @returns {number} Current slot number + 1
