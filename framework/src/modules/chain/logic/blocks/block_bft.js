@@ -14,13 +14,14 @@
 
 'use strict';
 
+const { getAddressFromPublicKey } = require('@liskhq/lisk-cryptography');
 const { Status: TransactionStatus } = require('@liskhq/lisk-transactions');
 const _ = require('lodash');
 const crypto = require('crypto');
 const ByteBuffer = require('bytebuffer');
-const Bignum = require('../helpers/bignum');
-const blockVersion = require('./block_version');
-const BlockReward = require('./block_reward');
+const Bignum = require('../../helpers/bignum');
+const blockVersion = require('../block_version');
+const BlockReward = require('../block_reward');
 
 const { MAX_PAYLOAD_LENGTH, FEES, TRANSACTION_TYPES } = global.constants;
 const __private = {};
@@ -69,6 +70,7 @@ class Block {
 	 * @todo Add description for the params
 	 */
 	create(data) {
+		console.log('hier in new\n\n\n\n\n');
 		const transactions = data.transactions.sort((a, b) => {
 			// Place MULTI transaction after all other transaction types
 			if (
@@ -140,7 +142,7 @@ class Block {
 			previousBlock: data.previousBlock.id,
 			generatorPublicKey: data.keypair.publicKey.toString('hex'),
 			transactions: blockTransactions,
-			height: data.height,
+			height: nextHeight,
 			heightPrevious: data.heightPrevious,
 			heightPrevoted: data.heightPrevoted,
 		};
@@ -417,7 +419,7 @@ class Block {
 			payloadLength: parseInt(raw.b_payloadLength),
 			payloadHash: raw.b_payloadHash,
 			generatorPublicKey: raw.b_generatorPublicKey,
-			generatorId: __private.getAddressByPublicKey(raw.b_generatorPublicKey),
+			generatorId: getAddressFromPublicKey(raw.b_generatorPublicKey),
 			blockSignature: raw.b_blockSignature,
 			confirmations: parseInt(raw.b_confirmations),
 		};
@@ -452,7 +454,7 @@ class Block {
 			payloadLength: parseInt(raw.payloadLength),
 			payloadHash: raw.payloadHash,
 			generatorPublicKey: raw.generatorPublicKey,
-			generatorId: __private.getAddressByPublicKey(raw.generatorPublicKey),
+			generatorId: getAddressFromPublicKey(raw.generatorPublicKey),
 			blockSignature: raw.blockSignature,
 			confirmations: parseInt(raw.confirmations),
 		};
@@ -573,28 +575,5 @@ class Block {
 		};
 	}
 }
-
-/**
- * Gets address by public.
- *
- * @private
- * @param {publicKey} publicKey
- * @returns {address} address
- * @todo Add description for the params
- */
-__private.getAddressByPublicKey = function(publicKey) {
-	const publicKeyHash = crypto
-		.createHash('sha256')
-		.update(publicKey, 'hex')
-		.digest();
-	const temp = Buffer.alloc(8);
-
-	for (let i = 0; i < 8; i++) {
-		temp[i] = publicKeyHash[7 - i];
-	}
-
-	const address = `${Bignum.fromBuffer(temp).toString()}L`;
-	return address;
-};
 
 module.exports = Block;

@@ -22,7 +22,10 @@ const {
 	errors: { NonSupportedOperationError },
 } = require('../../../../../components/storage');
 
-const defaultCreateValues = {};
+const defaultCreateValues = {
+	heightPrevious: null,
+	heightPrevoted: null,
+};
 const createFields = [
 	'id',
 	'height',

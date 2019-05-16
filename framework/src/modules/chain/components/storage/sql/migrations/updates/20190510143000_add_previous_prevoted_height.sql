@@ -19,8 +19,5 @@
 */
 
  -- Add to blocks column
-ALTER TABLE "blocks" ADD COLUMN IF NOT EXISTS "heightPrevious" INT DEFAULT 0;
-ALTER TABLE "blocks" ADD COLUMN IF NOT EXISTS "heightPrevoted" INT DEFAULT 0;
-ALTER TABLE "blocks"
-ALTER COLUMN "heightPrevious" SET NOT NULL,
-ALTER COLUMN "heightPrevoted" SET NOT NULL;
+ALTER TABLE "blocks" ADD COLUMN IF NOT EXISTS "heightPrevious" INT;
+ALTER TABLE "blocks" ADD COLUMN IF NOT EXISTS "heightPrevoted" INT;
