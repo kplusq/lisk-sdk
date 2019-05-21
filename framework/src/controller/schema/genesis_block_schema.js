@@ -63,14 +63,6 @@ module.exports = {
 			type: 'integer',
 			min: 0,
 		},
-		heightPrevoted: {
-			type: 'integer',
-			min: 0,
-		},
-		heightPrevious: {
-			type: 'integer',
-			min: 0,
-		},
 		previousBlock: {
 			type: ['null', 'string'],
 			format: 'id',

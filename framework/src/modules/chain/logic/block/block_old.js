@@ -14,8 +14,8 @@
 
 'use strict';
 
-const { getAddressFromPublicKey } = require('@liskhq/lisk-cryptography');
 const { Status: TransactionStatus } = require('@liskhq/lisk-transactions');
+const { getAddressFromPublicKey } = require('@liskhq/lisk-cryptography');
 const _ = require('lodash');
 const crypto = require('crypto');
 const ByteBuffer = require('bytebuffer');
@@ -40,12 +40,11 @@ let modules;
  * @param {Object} ed
  * @param {ZSchema} schema
  * @param {Transaction} transaction
- * @param {function} cb - Callback function
  * @returns {SetImmediate} error, this
  * @todo Add description for the params
  */
-class Block {
-	constructor(ed, schema, transaction, cb) {
+class BlockOld {
+	constructor(ed, schema, transaction) {
 		this.scope = {
 			ed,
 			schema,
@@ -55,9 +54,6 @@ class Block {
 		this.attachSchema();
 
 		__private.blockReward = new BlockReward();
-		if (cb) {
-			return setImmediate(cb, null, this);
-		}
 	}
 
 	/**
@@ -70,7 +66,6 @@ class Block {
 	 * @todo Add description for the params
 	 */
 	create(data) {
-		console.log('hier in new\n\n\n\n\n');
 		const transactions = data.transactions.sort((a, b) => {
 			// Place MULTI transaction after all other transaction types
 			if (
@@ -142,9 +137,6 @@ class Block {
 			previousBlock: data.previousBlock.id,
 			generatorPublicKey: data.keypair.publicKey.toString('hex'),
 			transactions: blockTransactions,
-			height: nextHeight,
-			heightPrevious: data.heightPrevious,
-			heightPrevoted: data.heightPrevoted,
 		};
 
 		try {
@@ -286,9 +278,6 @@ class Block {
 		const capacity =
 			4 + // version (int)
 			4 + // timestamp (int)
-			4 + // height (int)
-			4 + // heightPrevious (int)
-			4 + // heightPrevoted (int)
 			8 + // previousBlock
 			4 + // numberOfTransactions (int)
 			8 + // totalAmount (long)
@@ -300,13 +289,11 @@ class Block {
 			64 + // blockSignature or unused
 			4; // unused
 		let bytes;
+
 		try {
 			const byteBuffer = new ByteBuffer(capacity, true);
 			byteBuffer.writeInt(block.version);
 			byteBuffer.writeInt(block.timestamp);
-			byteBuffer.writeInt(block.height);
-			byteBuffer.writeInt(block.heightPrevious);
-			byteBuffer.writeInt(block.heightPrevoted);
 
 			if (block.previousBlock) {
 				const pb = new Bignum(block.previousBlock).toBuffer({ size: '8' });
@@ -398,7 +385,6 @@ class Block {
 	 * @returns {null|block} Block object
 	 * @todo Add description for the params
 	 */
-	// TODO: Check if method is still needed
 	// eslint-disable-next-line class-methods-use-this
 	dbRead(raw) {
 		if (!raw.b_id) {
@@ -409,8 +395,6 @@ class Block {
 			version: parseInt(raw.b_version),
 			timestamp: parseInt(raw.b_timestamp),
 			height: parseInt(raw.b_height),
-			heightPrevious: parseInt(raw.b_heightPrevious),
-			heightPrevoted: parseInt(raw.b_heightPrevoted),
 			previousBlock: raw.b_previousBlock,
 			numberOfTransactions: parseInt(raw.b_numberOfTransactions),
 			totalAmount: new Bignum(raw.b_totalAmount),
@@ -444,8 +428,6 @@ class Block {
 			version: parseInt(raw.version),
 			timestamp: parseInt(raw.timestamp),
 			height: parseInt(raw.height),
-			heightPrevious: parseInt(raw.heightPrevious),
-			heightPrevoted: parseInt(raw.heightPrevoted),
 			previousBlock: raw.previousBlockId,
 			numberOfTransactions: parseInt(raw.numberOfTransactions),
 			totalAmount: new Bignum(raw.totalAmount),
@@ -474,8 +456,6 @@ class Block {
 	 * @typedef {Object} block
 	 * @property {string} id - Between 1 and 20 chars
 	 * @property {number} height
-	 * @property {number} heightPrevious
-	 * @property {number} heightPrevoted
 	 * @property {signature} blockSignature
 	 * @property {publicKey} generatorPublicKey
 	 * @property {number} numberOfTransactions
@@ -501,12 +481,6 @@ class Block {
 					maxLength: 20,
 				},
 				height: {
-					type: 'integer',
-				},
-				heightPrevious: {
-					type: 'integer',
-				},
-				heightPrevoted: {
 					type: 'integer',
 				},
 				blockSignature: {
@@ -558,8 +532,6 @@ class Block {
 				},
 			},
 			required: [
-				'heightPrevious',
-				'heightPrevoted',
 				'blockSignature',
 				'generatorPublicKey',
 				'numberOfTransactions',
@@ -576,4 +548,4 @@ class Block {
 	}
 }
 
-module.exports = Block;
+module.exports = BlockOld;

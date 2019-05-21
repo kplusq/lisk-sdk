@@ -18,13 +18,17 @@ module.exports = async ({
 	ed,
 	schema,
 	components: { storage, logger },
-	config: { exceptions: { precedent: { bftUpgradeHeight }, }, },
+	config: {
+		exceptions: {
+			precedent: { bftUpgradeHeight },
+		},
+	},
 	registeredTransactions,
 }) => {
 	const InitTransaction = require('../logic/init_transaction.js');
 	const processTransactionLogic = require('../logic/process_transaction.js');
 	const Account = require('../logic/account.js');
-	const Block = require('../logic/blocks');
+	const Block = require('../logic/block');
 
 	const accountLogic = await new Promise((resolve, reject) => {
 		new Account(storage, schema, logger, (err, object) => {
@@ -36,12 +40,12 @@ module.exports = async ({
 		registeredTransactions,
 	});
 
-	const blockLogic = await new Promise((resolve, reject) => {
-		new Block(ed, schema, initTransactionLogic, bftUpgradeHeight, (err, object) => {
-			console.log(object);
-			err ? reject(err) : resolve(object);
-		});
-	});
+	const blockLogic = new Block(
+		ed,
+		schema,
+		initTransactionLogic,
+		bftUpgradeHeight
+	);
 
 	return {
 		account: accountLogic,
