@@ -23,14 +23,14 @@ const {
 } = require('../../../../../components/storage');
 
 const defaultCreateValues = {
-	heightPrevious: null,
-	heightPrevoted: null,
+	maxHeightPreviouslyForged: null,
+	prevotedConfirmedUptoHeight: null,
 };
 const createFields = [
 	'id',
 	'height',
-	'heightPrevious',
-	'heightPrevoted',
+	'maxHeightPreviouslyForged',
+	'prevotedConfirmedUptoHeight',
 	'blockSignature',
 	'generatorPublicKey',
 	'payloadHash',

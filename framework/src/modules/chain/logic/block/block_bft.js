@@ -137,8 +137,8 @@ class BlockBFT {
 			generatorPublicKey: data.keypair.publicKey.toString('hex'),
 			transactions: blockTransactions,
 			height: nextHeight,
-			heightPrevious: data.heightPrevious,
-			heightPrevoted: data.heightPrevoted,
+			maxHeightPreviouslyForged: data.maxHeightPreviouslyForged,
+			prevotedConfirmedUptoHeight: data.prevotedConfirmedUptoHeight,
 		};
 
 		try {
@@ -281,8 +281,8 @@ class BlockBFT {
 			4 + // version (int)
 			4 + // timestamp (int)
 			4 + // height (int)
-			4 + // heightPrevious (int)
-			4 + // heightPrevoted (int)
+			4 + // maxHeightPreviouslyForged (int)
+			4 + // prevotedConfirmedUptoHeight (int)
 			8 + // previousBlock
 			4 + // numberOfTransactions (int)
 			8 + // totalAmount (long)
@@ -299,8 +299,8 @@ class BlockBFT {
 			byteBuffer.writeInt(block.version);
 			byteBuffer.writeInt(block.timestamp);
 			byteBuffer.writeInt(block.height);
-			byteBuffer.writeInt(block.heightPrevious);
-			byteBuffer.writeInt(block.heightPrevoted);
+			byteBuffer.writeInt(block.maxHeightPreviouslyForged);
+			byteBuffer.writeInt(block.prevotedConfirmedUptoHeight);
 
 			if (block.previousBlock) {
 				const pb = new Bignum(block.previousBlock).toBuffer({ size: '8' });
@@ -403,8 +403,8 @@ class BlockBFT {
 			version: parseInt(raw.b_version),
 			timestamp: parseInt(raw.b_timestamp),
 			height: parseInt(raw.b_height),
-			heightPrevious: parseInt(raw.b_heightPrevious),
-			heightPrevoted: parseInt(raw.b_heightPrevoted),
+			maxHeightPreviouslyForged: parseInt(raw.b_maxHeightPreviouslyForged),
+			prevotedConfirmedUptoHeight: parseInt(raw.b_prevotedConfirmedUptoHeight),
 			previousBlock: raw.b_previousBlock,
 			numberOfTransactions: parseInt(raw.b_numberOfTransactions),
 			totalAmount: new Bignum(raw.b_totalAmount),
@@ -438,8 +438,8 @@ class BlockBFT {
 			version: parseInt(raw.version),
 			timestamp: parseInt(raw.timestamp),
 			height: parseInt(raw.height),
-			heightPrevious: parseInt(raw.heightPrevious),
-			heightPrevoted: parseInt(raw.heightPrevoted),
+			maxHeightPreviouslyForged: parseInt(raw.maxHeightPreviouslyForged),
+			prevotedConfirmedUptoHeight: parseInt(raw.prevotedConfirmedUptoHeight),
 			previousBlock: raw.previousBlockId,
 			numberOfTransactions: parseInt(raw.numberOfTransactions),
 			totalAmount: new Bignum(raw.totalAmount),
@@ -468,8 +468,8 @@ class BlockBFT {
 	 * @typedef {Object} block
 	 * @property {string} id - Between 1 and 20 chars
 	 * @property {number} height
-	 * @property {number} heightPrevious
-	 * @property {number} heightPrevoted
+	 * @property {number} maxHeightPreviouslyForged
+	 * @property {number} prevotedConfirmedUptoHeight
 	 * @property {signature} blockSignature
 	 * @property {publicKey} generatorPublicKey
 	 * @property {number} numberOfTransactions
@@ -497,10 +497,10 @@ class BlockBFT {
 				height: {
 					type: 'integer',
 				},
-				heightPrevious: {
+				maxHeightPreviouslyForged: {
 					type: 'integer',
 				},
-				heightPrevoted: {
+				prevotedConfirmedUptoHeight: {
 					type: 'integer',
 				},
 				blockSignature: {
@@ -552,8 +552,8 @@ class BlockBFT {
 				},
 			},
 			required: [
-				'heightPrevious',
-				'heightPrevoted',
+				'maxHeightPreviouslyForged',
+				'prevotedConfirmedUptoHeight',
 				'blockSignature',
 				'generatorPublicKey',
 				'numberOfTransactions',

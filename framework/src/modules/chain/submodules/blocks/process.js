@@ -333,8 +333,8 @@ class Process {
 					timestamp,
 					previousBlock: lastBlock,
 					transactions: readyTransactions,
-					heightPrevoted: 1,
-					heightPrevious: 1,
+					prevotedConfirmedUptoHeight: 1,
+					maxHeightPreviouslyForged: 1,
 					height: lastBlock.height + 1,
 				});
 

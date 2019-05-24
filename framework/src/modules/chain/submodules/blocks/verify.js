@@ -95,7 +95,7 @@ class Verify {
 		result = __private.verifyReward(block, result);
 		result = __private.verifyId(block, result);
 		result = __private.verifyPayload(block, result);
-		// TODO: Verify heightPrevoted and heightPrevious
+		// TODO: Verify prevotedConfirmedUptoHeight and maxHeightPreviouslyForged
 
 		result.verified = result.errors.length === 0;
 		result.errors.reverse();

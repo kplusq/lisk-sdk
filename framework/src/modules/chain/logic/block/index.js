@@ -98,8 +98,8 @@ class Block {
 	 * @typedef {Object} block
 	 * @property {string} id - Between 1 and 20 chars
 	 * @property {number} height
-	 * @property {number} heightPrevious
-	 * @property {number} heightPrevoted
+	 * @property {number} maxHeightPreviouslyForged
+	 * @property {number} prevotedConfirmedUptoHeight
 	 * @property {signature} blockSignature
 	 * @property {publicKey} generatorPublicKey
 	 * @property {number} numberOfTransactions
@@ -127,10 +127,10 @@ class Block {
 				height: {
 					type: 'integer',
 				},
-				heightPrevious: {
+				maxHeightPreviouslyForged: {
 					type: 'integer',
 				},
-				heightPrevoted: {
+				prevotedConfirmedUptoHeight: {
 					type: 'integer',
 				},
 				blockSignature: {
@@ -182,8 +182,8 @@ class Block {
 				},
 			},
 			required: [
-				'heightPrevious',
-				'heightPrevoted',
+				'maxHeightPreviouslyForged',
+				'prevotedConfirmedUptoHeight',
 				'blockSignature',
 				'generatorPublicKey',
 				'numberOfTransactions',

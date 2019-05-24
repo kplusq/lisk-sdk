@@ -192,12 +192,12 @@ module.exports = {
 						example: 123,
 						minimum: 1,
 					},
-					heightPrevoted: {
+					prevotedConfirmedUptoHeight: {
 						type: 'integer',
 						example: 123,
 						minimum: 0,
 					},
-					heightPrevious: {
+					maxHeightPreviouslyForged: {
 						type: 'integer',
 						example: 123,
 						minimum: 0,
