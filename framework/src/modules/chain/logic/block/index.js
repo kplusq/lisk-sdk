@@ -17,25 +17,29 @@ class Block {
 	}
 
 	create(data) {
-		return data.height > this.scope.bftUpgradeHeight
+		return data.height > this.scope.bftUpgradeHeight ||
+			this.scope.bftUpgradeHeight === 0
 			? this.blockBFT.create(data)
 			: this.blockOld.create(data);
 	}
 
 	sign(block, keypair) {
-		return block.height > this.scope.bftUpgradeHeight
+		return block.height > this.scope.bftUpgradeHeight ||
+			this.scope.bftUpgradeHeight === 0
 			? this.blockBFT.sign(block, keypair)
 			: this.blockOld.sign(block, keypair);
 	}
 
 	getHash(block) {
-		return block.height > this.scope.bftUpgradeHeight
+		return block.height > this.scope.bftUpgradeHeight ||
+			this.scope.bftUpgradeHeight === 0
 			? this.blockBFT.getHash(block)
 			: this.blockOld.getHash(block);
 	}
 
 	verifySignature(block) {
-		return block.height > this.scope.bftUpgradeHeight
+		return block.height > this.scope.bftUpgradeHeight ||
+			this.scope.bftUpgradeHeight === 0
 			? this.blockBFT.verifySignature(block)
 			: this.blockOld.verifySignature(block);
 	}
@@ -54,7 +58,8 @@ class Block {
 	}
 
 	getBytes(block) {
-		return block.height > this.scope.bftUpgradeHeight
+		return block.height > this.scope.bftUpgradeHeight ||
+			this.scope.bftUpgradeHeight === 0
 			? this.blockBFT.getBytes(block)
 			: this.blockOld.getBytes(block);
 	}
@@ -83,13 +88,15 @@ class Block {
 	}
 
 	dbRead(raw) {
-		return parseInt(raw.b_height) > this.scope.bftUpgradeHeight
+		return parseInt(raw.b_height) > this.scope.bftUpgradeHeight ||
+			this.scope.bftUpgradeHeight === 0
 			? this.blockBFT.dbRead(raw)
 			: this.blockOld.dbRead(raw);
 	}
 
 	storageRead(raw) {
-		return parseInt(raw.height) > this.scope.bftUpgradeHeight
+		return parseInt(raw.height) > this.scope.bftUpgradeHeight ||
+			this.scope.bftUpgradeHeight === 0
 			? this.blockBFT.storageRead(raw)
 			: this.blockOld.storageRead(raw);
 	}
