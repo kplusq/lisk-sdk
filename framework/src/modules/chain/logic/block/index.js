@@ -7,7 +7,7 @@ class Block {
 			ed,
 			schema,
 			transaction,
-			bftUpgradeHeight,
+			bftUpgradeHeight, // bftUpgradeHeight == 0 -> use new BFT implementation by default
 		};
 
 		this.blockOld = new BlockOld(ed, schema, transaction);
