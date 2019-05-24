@@ -49,12 +49,12 @@ const wrapAddTransactionResponseInCb = (
 	return cb();
 };
 
-const receivedQueue = 'recieved';
+const receivedQueue = 'received';
 // TODO: Need to decide which queue will include transactions in the validated queue
-// const validatedQueue = 'validated';
 const pendingQueue = 'pending';
 const verifiedQueue = 'verified';
 const readyQueue = 'ready';
+const validatedQueue = 'validated';
 
 /**
  * Transaction pool logic. Initializes variables,
@@ -63,7 +63,6 @@ const readyQueue = 'ready';
  * @memberof logic
  * @see Parent: {@link logic}
  * @requires async
- * @requires helpers/jobs_queue
  * @param {number} broadcastInterval - Broadcast interval in seconds, used for bundling
  * @param {number} releaseLimit - Release limit for transactions broadcasts, used for bundling
  * @param {Object} logger - Logger instance
@@ -72,7 +71,6 @@ const readyQueue = 'ready';
 class TransactionPool {
 	constructor(broadcastInterval, releaseLimit, logger, config, bus) {
 		this.maxTransactionsPerQueue = config.transactions.maxTransactionsPerQueue;
-		this.expiryInterval = EXPIRY_INTERVAL;
 		this.bundledInterval = broadcastInterval;
 		this.bundleLimit = releaseLimit;
 		this.logger = logger;
@@ -97,15 +95,15 @@ class TransactionPool {
 		);
 
 		const poolConfig = {
-			expireTransactionsInterval: this.expiryInterval,
+			expireTransactionsInterval: EXPIRY_INTERVAL,
 			maxTransactionsPerQueue: this.maxTransactionsPerQueue,
 			receivedTransactionsLimitPerProcessing: this.bundleLimit,
 			receivedTransactionsProcessingInterval: this.bundledInterval,
 			validatedTransactionsLimitPerProcessing: this.bundleLimit,
 			validatedTransactionsProcessingInterval: this.bundledInterval,
-			verifiedTransactionsLimitPerProcessing: this.MAX_TRANSACTIONS_PER_BLOCK,
+			verifiedTransactionsLimitPerProcessing: MAX_TRANSACTIONS_PER_BLOCK,
 			verifiedTransactionsProcessingInterval: this.bundledInterval,
-			pendingTransactionsProcessingLimit: this.MAX_TRANSACTIONS_PER_BLOCK,
+			pendingTransactionsProcessingLimit: MAX_TRANSACTIONS_PER_BLOCK,
 		};
 
 		const poolDependencies = {
@@ -124,15 +122,15 @@ class TransactionPool {
 
 	resetPool() {
 		const poolConfig = {
-			expireTransactionsInterval: this.expiryInterval,
+			expireTransactionsInterval: EXPIRY_INTERVAL,
 			maxTransactionsPerQueue: this.maxTransactionsPerQueue,
 			receivedTransactionsLimitPerProcessing: this.bundleLimit,
 			receivedTransactionsProcessingInterval: this.bundledInterval,
 			validatedTransactionsLimitPerProcessing: this.bundleLimit,
 			validatedTransactionsProcessingInterval: this.bundledInterval,
-			verifiedTransactionsLimitPerProcessing: this.MAX_TRANSACTIONS_PER_BLOCK,
+			verifiedTransactionsLimitPerProcessing: MAX_TRANSACTIONS_PER_BLOCK,
 			verifiedTransactionsProcessingInterval: this.bundledInterval,
-			pendingTransactionsProcessingLimit: this.MAX_TRANSACTIONS_PER_BLOCK,
+			pendingTransactionsProcessingLimit: MAX_TRANSACTIONS_PER_BLOCK,
 		};
 
 		const poolDependencies = {
@@ -175,6 +173,13 @@ class TransactionPool {
 					)}`
 				);
 			}
+			const queueSizes = Object.keys(this.pool._queues)
+				.map(
+					queueName =>
+						`${queueName} size: ${this.pool._queues[queueName].size()}`
+				)
+				.join(' ');
+			this.logger.info(`Transaction pool - ${queueSizes}`);
 		});
 	}
 
@@ -220,6 +225,28 @@ class TransactionPool {
 	}
 
 	/**
+	 * Gets validated transactions based on limit and reverse option.
+	 *
+	 * @param {boolean} reverse - Reverse order of results
+	 * @param {number} limit - Limit applied to results
+	 * @returns {Object[]} Of bundled transactions
+	 */
+	getValidatedTransactionList(reverse, limit) {
+		return this.getTransactionsList(validatedQueue, reverse, limit);
+	}
+
+	/**
+	 * Gets received transactions based on limit and reverse option.
+	 *
+	 * @param {boolean} reverse - Reverse order of results
+	 * @param {number} limit - Limit applied to results
+	 * @returns {Object[]} Of bundled transactions
+	 */
+	getReceivedTransactionList(reverse, limit) {
+		return this.getTransactionsList(receivedQueue, reverse, limit);
+	}
+
+	/**
 	 * Gets multisignature transactions based on limit and reverse option.
 	 *
 	 * @param {boolean} reverse - Reverse order of results
@@ -237,7 +264,7 @@ class TransactionPool {
 	}
 
 	getCountByQueue(queueName) {
-		this.pool.queues[queueName].size();
+		return this.pool.queues[queueName].size();
 	}
 
 	getTransactionsList(queueName, reverse, limit) {
@@ -344,6 +371,9 @@ class TransactionPool {
 				if (transactionsResponses[0].status === TransactionStatus.PENDING) {
 					return this.addMultisignatureTransaction(transaction, cb);
 				}
+				this.logger.info(
+					`Transaction pool - ${transactionsResponses[0].errors}`
+				);
 				return cb(transactionsResponses[0].errors);
 			}
 		);

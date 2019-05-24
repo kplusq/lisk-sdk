@@ -19,7 +19,6 @@ const { transfer } = require('@liskhq/lisk-transactions');
 const _ = require('lodash');
 const rewire = require('rewire');
 const async = require('async');
-const Promise = require('bluebird');
 const Bignum = require('../../../../../src/modules/chain/helpers/bignum');
 const application = require('../../../common/application');
 const { clearDatabaseTable } = require('../../../common/storage_sandbox');
@@ -150,13 +149,11 @@ function createBlock(
 }
 
 function getValidKeypairForSlot(library, slot) {
-	const generateDelegateListPromisified = Promise.promisify(
-		library.modules.delegates.generateDelegateList
-	);
 	const lastBlock = genesisBlock;
 	const round = slots.calcRound(lastBlock.height);
 
-	return generateDelegateListPromisified(round, null)
+	return library.modules.rounds
+		.generateDelegateList(round, null)
 		.then(list => {
 			const delegatePublicKey = list[slot % ACTIVE_DELEGATES];
 			const passphrase = _.find(genesisDelegates, delegate => {
@@ -174,7 +171,7 @@ describe('blocks/verify', () => {
 	let blocksVerify;
 	let blocks;
 	let blockLogic;
-	let delegates;
+	let rounds;
 	let storage;
 	let results;
 
@@ -189,7 +186,7 @@ describe('blocks/verify', () => {
 				blocksVerify = scope.modules.blocks.verify;
 				blockLogic = scope.logic.block;
 				blocks = scope.modules.blocks;
-				delegates = scope.modules.delegates;
+				rounds = scope.modules.rounds;
 				storage = scope.components.storage;
 
 				// Set current block version to 0
@@ -882,7 +879,7 @@ describe('blocks/verify', () => {
 					if (err) {
 						return done(err);
 					}
-					return delegates.generateDelegateList(1, null, done);
+					return rounds.generateDelegateList(1, null).then(() => done());
 				}
 			);
 		});
@@ -1045,7 +1042,7 @@ describe('blocks/verify', () => {
 			it('should fail when block generator is invalid (fork:3)', done => {
 				blocksVerify.processBlock(block2, false, true, err => {
 					if (err) {
-						expect(err).equal('Failed to verify slot: 3377288');
+						expect(err.message).equal('Failed to verify slot: 3377288');
 						done();
 					}
 				});

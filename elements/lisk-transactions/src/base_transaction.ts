@@ -102,6 +102,7 @@ export abstract class BaseTransaction {
 	public readonly recipientId: string;
 	public readonly blockId?: string;
 	public readonly height?: number;
+	public readonly relays?: number;
 	public readonly confirmations?: number;
 	public readonly recipientPublicKey?: string;
 	public readonly senderId: string;
@@ -132,6 +133,8 @@ export abstract class BaseTransaction {
 	protected abstract verifyAgainstTransactions(
 		transactions: ReadonlyArray<TransactionJSON>,
 	): ReadonlyArray<TransactionError>;
+	// tslint:disable-next-line no-any
+	protected abstract assetFromSync(raw: any): object | undefined;
 
 	// tslint:disable-next-line cyclomatic-complexity
 	public constructor(rawTransaction: unknown) {
@@ -169,6 +172,7 @@ export abstract class BaseTransaction {
 		this.blockId = tx.blockId;
 		this.height = tx.height;
 		this.receivedAt = tx.receivedAt ? new Date(tx.receivedAt) : undefined;
+		this.relays = typeof tx.relays === 'number' ? tx.relays : undefined;
 	}
 
 	public get id(): string {
@@ -196,6 +200,7 @@ export abstract class BaseTransaction {
 			id: this.id,
 			blockId: this.blockId,
 			height: this.height,
+			relays: this.relays,
 			confirmations: this.confirmations,
 			amount: this.amount.toString(),
 			type: this.type,
@@ -452,6 +457,39 @@ export abstract class BaseTransaction {
 			this._signSignature = signData(hash(this.getBytes()), secondPassphrase);
 		}
 		this._id = getId(this.getBytes());
+	}
+
+	/* tslint:disable:next-line: no-any no-null-keyword */
+	public fromSync(raw: any): TransactionJSON | null {
+		const transactionJSON: TransactionJSON & {
+			readonly requesterPublicKey: string;
+			readonly [key: string]: string | number | object | null;
+		} = {
+			id: raw.t_id,
+			height: raw.b_height,
+			blockId: raw.b_id || raw.t_blockId,
+			type: parseInt(raw.t_type, 10),
+			timestamp: parseInt(raw.t_timestamp, 10),
+			senderPublicKey: raw.t_senderPublicKey,
+			requesterPublicKey: raw.t_requesterPublicKey,
+			senderId: raw.t_senderId,
+			recipientId: raw.t_recipientId,
+			recipientPublicKey: raw.m_recipientPublicKey || null,
+			amount: raw.t_amount,
+			fee: raw.t_fee,
+			signature: raw.t_signature,
+			signSignature: raw.t_signSignature,
+			signatures: raw.t_signatures ? raw.t_signatures.split(',') : [],
+			confirmations: parseInt(raw.confirmations || 0, 10),
+			asset: {},
+		};
+
+		const transaction = {
+			...transactionJSON,
+			asset: this.assetFromSync(raw) || {},
+		};
+
+		return transaction;
 	}
 
 	protected getBasicBytes(): Buffer {

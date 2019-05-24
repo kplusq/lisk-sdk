@@ -24,8 +24,11 @@ module.exports = async ({
 		},
 	},
 	registeredTransactions,
+	config,
+	bus,
 }) => {
 	const InitTransaction = require('../logic/init_transaction.js');
+	const TransactionPool = require('../logic/transaction_pool.js');
 	const processTransactionLogic = require('../logic/process_transaction.js');
 	const Account = require('../logic/account.js');
 	const Block = require('../logic/block');
@@ -35,10 +38,7 @@ module.exports = async ({
 			err ? reject(err) : resolve(object);
 		});
 	});
-
-	const initTransactionLogic = new InitTransaction({
-		registeredTransactions,
-	});
+	const initTransactionLogic = new InitTransaction({ registeredTransactions });
 
 	const blockLogic = new Block(
 		ed,
@@ -47,10 +47,19 @@ module.exports = async ({
 		bftUpgradeHeight
 	);
 
+	const transactionPoolLogic = new TransactionPool(
+		config.broadcasts.broadcastInterval,
+		config.broadcasts.releaseLimit,
+		logger,
+		config,
+		bus
+	);
+
 	return {
 		account: accountLogic,
 		initTransaction: initTransactionLogic,
 		processTransaction: processTransactionLogic,
 		block: blockLogic,
+		transactionPool: transactionPoolLogic,
 	};
 };

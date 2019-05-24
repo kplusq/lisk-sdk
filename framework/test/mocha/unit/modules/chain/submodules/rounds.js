@@ -16,10 +16,9 @@
 
 // Init tests dependencies
 const rewire = require('rewire');
-
+const cryptography = require('@liskhq/lisk-cryptography');
 // Instantiate test subject
-const Rounds = rewire('../../../../../../src/modules/chain/submodules/rounds');
-const Round = rewire('../../../../../../src/modules/chain/logic/round'); // eslint-disable-line no-unused-vars
+const Rounds = rewire('../../../../../../src/modules/chain/rounds/rounds');
 const { TestStorageSandbox } = require('../../../../common/storage_sandbox');
 
 const sinon = sinonSandbox;
@@ -39,7 +38,7 @@ describe('rounds', () => {
 	};
 
 	const storageStubs = {
-		Account: { getOne: sinon.stub() },
+		Account: { getOne: sinon.stub(), get: sinon.stub().returns([]) },
 		Round: {
 			delete: sinon.stub(),
 			summedRound: sinon.stub(),
@@ -75,12 +74,9 @@ describe('rounds', () => {
 			},
 		},
 		modules: {
-			delegates: {
+			rounds: {
 				generateDelegateList: sinon.stub(),
 				clearDelegateListCache: sinon.stub(),
-			},
-			accounts: {
-				generateAddressByPublicKey: sinon.stub(),
 			},
 		},
 	};
@@ -104,18 +100,25 @@ describe('rounds', () => {
 	beforeEach(done => {
 		scope = _.cloneDeep(validScope);
 
-		bindings.modules.delegates.generateDelegateList.yields(null, [
+		bindings.modules.rounds.generateDelegateList.resolves([
 			'delegate1',
 			'delegate2',
 			'delegate3',
 		]);
-		bindings.modules.accounts.generateAddressByPublicKey.returnsArg(0);
 
-		new Rounds((err, __instance) => {
-			rounds = __instance;
-			rounds.onBind(bindings);
-			done();
-		}, scope);
+		sinonSandbox.stub(cryptography, 'getAddressFromPublicKey');
+		cryptography.getAddressFromPublicKey
+			.withArgs('delegate1')
+			.returns('delegate1');
+		cryptography.getAddressFromPublicKey
+			.withArgs('delegate2')
+			.returns('delegate2');
+		cryptography.getAddressFromPublicKey
+			.withArgs('delegate3')
+			.returns('delegate3');
+
+		rounds = new Rounds(scope);
+		done();
 	});
 
 	afterEach(done => {
@@ -134,11 +137,6 @@ describe('rounds', () => {
 			expect(library.storage).to.eql(validScope.components.storage);
 			expect(library.bus).to.eql(validScope.bus);
 			expect(library.channel).to.eql(validScope.channel);
-		});
-
-		it('should set self object', async () => {
-			const self = Rounds.__get__('self');
-			return expect(self).to.deep.equal(rounds);
 		});
 	});
 
@@ -160,23 +158,6 @@ describe('rounds', () => {
 			const value = 'abc';
 			set(variable, value);
 			expect(get(variable)).to.equal(value);
-			return set(variable, backup);
-		});
-	});
-
-	describe('onBind', () => {
-		it('should set modules', async () => {
-			const variable = 'modules';
-			const backup = get(variable);
-			const roundBindings = {
-				modules: {
-					blocks: 'blocks',
-					accounts: 'accounts',
-					delegates: 'delegates',
-				},
-			};
-			rounds.onBind(roundBindings);
-			expect(get(variable)).to.deep.equal(roundBindings.modules);
 			return set(variable, backup);
 		});
 	});
@@ -236,6 +217,10 @@ describe('rounds', () => {
 
 		beforeEach(async () => {
 			getOutsiders = get('__private.getOutsiders');
+			set(
+				'library.delegates.generateDelegateList',
+				sinon.stub().resolves(['delegate1', 'delegate2', 'delegate3'])
+			);
 		});
 
 		describe('when scope.block.height = 1', () => {
@@ -254,6 +239,7 @@ describe('rounds', () => {
 		describe('when scope.block.height != 1', () => {
 			beforeEach(async () => {
 				scope.block = { height: 2 };
+				scope.round = 1;
 			});
 
 			describe('when generateDelegateList is successful', () => {
@@ -292,7 +278,7 @@ describe('rounds', () => {
 					});
 
 					it('should add 1 outsider scope.roundOutsiders', done => {
-						getOutsiders(scope, async () => {
+						getOutsiders(scope, () => {
 							expect(scope.roundOutsiders).to.be.eql(['delegate1']);
 							done();
 						});
@@ -313,7 +299,7 @@ describe('rounds', () => {
 					});
 
 					it('should add 2 outsiders to scope.roundOutsiders', done => {
-						getOutsiders(scope, async () => {
+						getOutsiders(scope, () => {
 							expect(scope.roundOutsiders).to.be.eql([
 								'delegate1',
 								'delegate2',
@@ -327,12 +313,15 @@ describe('rounds', () => {
 			describe('when generateDelegateList fails', () => {
 				beforeEach(async () => {
 					scope.block.height = 2;
-					bindings.modules.delegates.generateDelegateList.yields('error');
+					const library = get('library');
+					library.delegates = {
+						generateDelegateList: sinon.stub().rejects(new Error('error')),
+					};
 				});
 
 				it('should call a callback with error', done => {
 					getOutsiders(scope, err => {
-						expect(err).to.equal('error');
+						expect(err.message).to.equal('error');
 						done();
 					});
 				});

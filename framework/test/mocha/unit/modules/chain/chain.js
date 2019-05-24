@@ -17,7 +17,8 @@
 /* eslint-disable mocha/no-pending-tests */
 const rewire = require('rewire');
 
-const Chain = rewire('../../../../../src/modules/chain/chain.js');
+const Chain = rewire('../../../../../src/modules/chain/chain');
+const Loader = require('../../../../../src/modules/chain/loader');
 const BlockReward = require('../../../../../src/modules/chain/logic/block_reward');
 const slots = require('../../../../../src/modules/chain/helpers/slots');
 const {
@@ -25,7 +26,6 @@ const {
 	cacheConfig,
 	storageConfig,
 	chainOptions,
-	gitLastCommitId,
 } = require('./chain.fixtures');
 
 describe('Chain', () => {
@@ -34,6 +34,8 @@ describe('Chain', () => {
 
 	beforeEach(async () => {
 		// Arrange
+
+		sinonSandbox.stub(Loader.prototype, 'loadBlockChain').resolves();
 
 		/* Arranging Stubs start */
 		stubs.logger = {
@@ -55,6 +57,9 @@ describe('Chain', () => {
 
 		stubs.logic = {
 			block: {
+				bindModules: sinonSandbox.stub(),
+			},
+			account: {
 				bindModules: sinonSandbox.stub(),
 			},
 		};
@@ -94,10 +99,6 @@ describe('Chain', () => {
 		stubs.createCacheComponent = sinonSandbox.stub().returns(stubs.cache);
 		stubs.createStorageComponent = sinonSandbox.stub().returns(stubs.storage);
 
-		stubs.git = {
-			getLastCommit: sinonSandbox.stub().returns(gitLastCommitId),
-		};
-
 		stubs.initSteps = {
 			createBus: sinonSandbox.stub().resolves(stubs.bus),
 			bootstrapStorage: sinonSandbox.stub(),
@@ -116,11 +117,12 @@ describe('Chain', () => {
 		Chain.__set__('bootstrapCache', stubs.initSteps.bootstrapCache);
 		Chain.__set__('initLogicStructure', stubs.initSteps.initLogicStructure);
 		Chain.__set__('initModules', stubs.initSteps.initModules);
-		Chain.__set__('git', stubs.git);
 
 		// Act
 		chain = new Chain(stubs.channel, chainOptions);
 	});
+
+	afterEach(() => sinonSandbox.restore());
 
 	describe('constructor', () => {
 		it('should accept channel as first parameter and assign to object instance', () => {
@@ -140,9 +142,9 @@ describe('Chain', () => {
 	});
 
 	describe('bootstrap', () => {
-		beforeEach(() => {
+		beforeEach(async () => {
 			// Act
-			return chain.bootstrap();
+			await chain.bootstrap();
 		});
 
 		it('should be an async function', () => {
@@ -183,10 +185,6 @@ describe('Chain', () => {
 					...differentStorageConfig,
 				});
 			});
-		});
-
-		it('should get last commit from git', () => {
-			return expect(chain.scope.lastCommit).to.be.equal(gitLastCommitId);
 		});
 
 		it('should set global.constants from the constants passed by options', () => {
@@ -240,8 +238,58 @@ describe('Chain', () => {
 			await chain.bootstrap();
 
 			// Assert
+			expect(chain.logger.fatal).to.be.calledOnce;
 			expect(chain.logger.fatal).to.have.been.calledWith(
 				'Chain initialization'
+			);
+			expect(chain.logger.fatal.firstCall.args[1].message).to.be.eql(
+				'Failed to assign nethash from genesis block'
+			);
+		});
+
+		it('should throw error when waitThreshold is greater than BLOCK_TIME', async () => {
+			const invalidChainOptions = Object.assign({}, chainOptions, {
+				forging: {
+					waitThreshold: 5,
+				},
+				constants: {
+					BLOCK_TIME: 4,
+				},
+			});
+
+			chain = new Chain(stubs.channel, invalidChainOptions);
+
+			await chain.bootstrap();
+
+			expect(chain.logger.fatal).to.be.calledOnce;
+			expect(chain.logger.fatal).to.have.been.calledWith(
+				'Chain initialization'
+			);
+			expect(chain.logger.fatal.firstCall.args[1].message).to.be.eql(
+				'modules.chain.forging.waitThreshold=5 is greater or equal to app.genesisConfig.BLOCK_TIME=4. It impacts the forging and propagation of blocks. Please use a smaller value for modules.chain.forging.waitThreshold'
+			);
+		});
+
+		it('should throw error when waitThreshold is same as BLOCK_TIME', async () => {
+			const invalidChainOptions = Object.assign({}, chainOptions, {
+				forging: {
+					waitThreshold: 5,
+				},
+				constants: {
+					BLOCK_TIME: 5,
+				},
+			});
+
+			chain = new Chain(stubs.channel, invalidChainOptions);
+
+			await chain.bootstrap();
+
+			expect(chain.logger.fatal).to.be.calledOnce;
+			expect(chain.logger.fatal).to.have.been.calledWith(
+				'Chain initialization'
+			);
+			expect(chain.logger.fatal.firstCall.args[1].message).to.be.eql(
+				'modules.chain.forging.waitThreshold=5 is greater or equal to app.genesisConfig.BLOCK_TIME=5. It impacts the forging and propagation of blocks. Please use a smaller value for modules.chain.forging.waitThreshold'
 			);
 		});
 
@@ -259,9 +307,7 @@ describe('Chain', () => {
 
 		it('should initialize scope object with valid structure', async () => {
 			// @todo write a snapshot tests after migrated this test to jest.
-			expect(chain.scope).to.have.property('lastCommit');
 			expect(chain.scope).to.have.property('ed');
-			expect(chain.scope).to.have.property('build');
 			expect(chain.scope).to.have.property('config');
 			expect(chain.scope).to.have.nested.property('genesisBlock.block');
 			expect(chain.scope).to.have.property('schema');
@@ -306,6 +352,12 @@ describe('Chain', () => {
 		it('should bind modules with scope.logic.block', () => {
 			return expect(
 				chain.scope.logic.block.bindModules
+			).to.have.been.calledWith(stubs.modules);
+		});
+
+		it('should bind modules with scope.logic.account', () => {
+			return expect(
+				chain.scope.logic.account.bindModules
 			).to.have.been.calledWith(stubs.modules);
 		});
 

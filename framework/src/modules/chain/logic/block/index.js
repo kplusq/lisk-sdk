@@ -1,4 +1,4 @@
-const BlockOld = require('./block_old');
+const BlockOld = require('./block');
 const BlockBFT = require('./block_bft');
 
 class Block {

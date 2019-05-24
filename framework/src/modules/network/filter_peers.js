@@ -13,6 +13,8 @@
  */
 const { shuffle } = require('lodash');
 
+const PEER_STATE_CONNECTED = 2;
+const PEER_STATE_DISCONNECTED = 1;
 /**
  * Sorts peers.
  *
@@ -168,18 +170,22 @@ const getCountByFilter = (peers, filter) => {
  */
 const getConsolidatedPeersList = networkStatus => {
 	const { connectedPeers, newPeers, triedPeers } = networkStatus;
+	// Assign state 2 to the connected peers
+	const connectedList = connectedPeers.map(peer => {
+		const { ipAddress, options, minVersion, nethash, ...peerWithoutIp } = peer;
 
-	const uniquerPeersList = [
-		...connectedPeers,
-		...newPeers,
-		...triedPeers,
-	].reduce((uniquePeers, peer) => {
-		const found = uniquePeers.find(
-			findPeer =>
-				findPeer.ip === peer.ipAddress && findPeer.wsPort === peer.wsPort
-		);
-
-		if (!found) {
+		return { ip: ipAddress, ...peerWithoutIp, state: PEER_STATE_CONNECTED };
+	});
+	// For the peers that are not present in connectedList should be assigned state 1 which is a DISCONNECTED state.
+	const disconnectedList = [...newPeers, ...triedPeers]
+		.filter(peer => {
+			const found = connectedList.find(
+				findPeer =>
+					findPeer.ip === peer.ipAddress && findPeer.wsPort === peer.wsPort
+			);
+			return !found;
+		})
+		.map(peer => {
 			const {
 				ipAddress,
 				options,
@@ -188,12 +194,14 @@ const getConsolidatedPeersList = networkStatus => {
 				...peerWithoutIp
 			} = peer;
 
-			return [...uniquePeers, { ip: ipAddress, ...peerWithoutIp }];
-		}
-		return uniquePeers;
-	}, []);
+			return {
+				ip: ipAddress,
+				...peerWithoutIp,
+				state: PEER_STATE_DISCONNECTED,
+			};
+		});
 
-	return uniquerPeersList;
+	return [...connectedList, ...disconnectedList];
 };
 
 module.exports = {
