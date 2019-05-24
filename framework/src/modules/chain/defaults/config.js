@@ -202,7 +202,11 @@ const defaultConfig = {
 							type: 'integer',
 						},
 					},
-					required: ['disableDappTransfer', 'disableDappTransaction', 'bftUpgradeHeight'],
+					required: [
+						'disableDappTransfer',
+						'disableDappTransaction',
+						'bftUpgradeHeight',
+					],
 				},
 				ignoreDelegateListCacheForRounds: {
 					type: 'array',
@@ -294,7 +298,11 @@ const defaultConfig = {
 			votes: [],
 			inertTransactions: [],
 			rounds: {},
-			precedent: { disableDappTransfer: 0, disableDappTransaction: 0, bftUpgradeHeight: 3 },
+			precedent: {
+				disableDappTransfer: 0,
+				disableDappTransaction: 0,
+				bftUpgradeHeight: 0,
+			},
 			ignoreDelegateListCacheForRounds: [],
 			blockVersions: {},
 			roundVotes: [],
