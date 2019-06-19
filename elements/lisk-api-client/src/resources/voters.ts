@@ -19,6 +19,17 @@ import { APIHandler } from '../api_types';
 import { GET } from '../constants';
 
 export class VotersResource extends APIResource {
+	/**
+	 * Returns all votes received by a delegate.
+	 *
+	 * ### Usage Example
+	 * ```ts
+	 * client.accounts.get({ username: 'oliver' })
+	 *   .then(res => {
+	 *     console.log(res.data);
+	 * });
+	 * ```
+	 */
 	public get: APIHandler;
 	public path: string;
 
@@ -26,16 +37,6 @@ export class VotersResource extends APIResource {
 		super(apiClient);
 		this.path = '/voters';
 
-		/**
-		 * Returns all votes received by a delegate.
-		 *
-		 * ```ts
-		 * client.accounts.get({ username: 'oliver' })
-		 *   .then(res => {
-		 *     console.log(res.data);
-		 * });
-		 * ```
-		 */
 		this.get = apiMethod({
 			method: GET,
 		}).bind(this);

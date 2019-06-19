@@ -19,6 +19,17 @@ import { APIHandler } from '../api_types';
 import { GET } from '../constants';
 
 export class PeersResource extends APIResource {
+	/**
+	 * Searches for specified peers.
+	 *
+	 * ### Usage Example
+	 * ```ts
+	 * client.accounts.get({ height: 5509963 })
+	 *   .then(res => {
+	 *     console.log(res.data);
+	 * });
+	 * ```
+	 */
 	public get: APIHandler;
 	public path: string;
 
@@ -26,16 +37,6 @@ export class PeersResource extends APIResource {
 		super(apiClient);
 		this.path = '/peers';
 
-		/**
-		 * Searches for specified peers.
-		 *
-		 * ```ts
-		 * client.accounts.get({ height: 5509963 })
-		 *   .then(res => {
-		 *     console.log(res.data);
-		 * });
-		 * ```
-		 */
 		this.get = apiMethod({
 			method: GET,
 		}).bind(this);

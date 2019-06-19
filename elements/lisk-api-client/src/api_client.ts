@@ -61,7 +61,81 @@ export interface ClientOptions {
 	readonly version?: string;
 }
 
+/**
+ * The Lisk Elements API Client provides a convenient wrapper for interacting with the public API of nodes on the Lisk network.
+ *
+ * ## Installation
+ *
+ * Add Lisk Client as a dependency of your project:
+ *
+ * ```bash
+ * $ npm install --save @liskhq/lisk-api-client
+ * ```
+ *
+ * ## Upgrade
+ *
+ * ```bash
+ * npm update --save @liskhq/lisk-api-client
+ * ```
+ *
+ * ## APIClient
+ *
+ * We expose a constructor, which takes an array of nodes, and optionally an options object. For convenience, we provide helper functions for creating API clients on specific networks with a default set of nodes. We recommend using these functions unless you operate your own nodes, or have good reasons to prefer nodes provided by a third party. *If you use the generic constructor, it is your responsibility to ensure that the nodes you specify are on the correct network.*
+ *
+ * ### Syntax
+ *
+ * ```js
+ * new APIClient(nodes, [options])
+ * APIClient.createMainnetAPIClient([options])
+ * APIClient.createTestnetAPIClient([options])
+ * ```
+ *
+ * ### Examples
+ *
+ * ```js
+ * import * as APIClient from '@liskhq/lisk-api-client';
+ *
+ * const client = new APIClient(['https://node01.lisk.io:443', 'https://node02.lisk.io:443']);
+ * const clientWithOptions = new APIClient(
+ * ['https://node01.lisk.io:443', 'https://node02.lisk.io:443'],
+ * {
+ *    bannedNodes: ['https://my.faultynode.io:443'],
+ *    client: {
+ *       name: 'My Lisk Client',
+ *       version: '1.2.3',
+ *       engine: 'Some custom engine',
+ *    },
+ *    nethash: '9a9813156bf1d2355da31a171e37f97dfa7568187c3fd7f9c728de8f180c19c7',
+ *    node: 'https://my.preferrednode.io:443',
+ *    randomizeNodes: false,
+ *    });
+ *
+ * const mainnetClient = APIClient.createMainnetAPIClient();
+ * const testnetClient = APIClient.createTestnetAPIClient();
+ * ```
+ */
 export class APIClient {
+	/**
+	 * ## Constants
+	 *
+	 * API-specific constants are available via the `APIClient` constructor, and include relevant HTTP methods and lists of default nodes.
+	 *
+	 * ### Examples
+	 *
+	 * ```js
+	 * import APIClient from '@liskhq/lisk-api-client';
+	 *
+	 * APIClient.constants.GET; // 'GET'
+	 * APIClient.constants.POST; // 'POST'
+	 * APIClient.constants.PUT; // 'PUT'
+	 *
+	 * APIClient.constants.TESTNET_NETHASH; // Nethash for Testnet.
+	 * APIClient.constants.MAINNET_NETHASH; // Nethash for Mainnet.
+	 *
+	 * APIClient.constants.TESTNET_NODES; // Array of default Testnet nodes.
+	 * APIClient.constants.MAINNET_NODES; // Array of default Mainnet nodes.
+	 * ```
+	 */
 	public static get constants(): typeof constants {
 		return constants;
 	}
@@ -117,6 +191,15 @@ export class APIClient {
 		return this.banNode(this.currentNode);
 	}
 
+	/**
+	 * Bans the current node and selects a new random (non-banned) node.
+	 *
+	 * ### Usage Exmaple
+	 *
+	 * ```ts
+	 * client.banActiveNodeAndSelect()
+	 * ```
+	 */
 	public banActiveNodeAndSelect(): boolean {
 		const banned = this.banActiveNode();
 		if (banned) {
@@ -126,6 +209,15 @@ export class APIClient {
 		return banned;
 	}
 
+	/**
+	 * Adds a node to the list of banned nodes. Banned nodes will not be chosen to replace an unreachable node.
+	 *
+	 * ### Usage Exmaple
+	 *
+	 * ```ts
+	 * client.banNode('https://my.faultynode.io:443');
+	 * ```
+	 */
 	public banNode(node: string): boolean {
 		if (!this.isBanned(node)) {
 			this.bannedNodes = [...this.bannedNodes, node];
@@ -136,6 +228,15 @@ export class APIClient {
 		return false;
 	}
 
+	/**
+	 * Selects a random node that has not been banned.
+	 *
+	 * ### Usage Exmaple
+	 *
+	 * ```ts
+	 * const randomNode = client.getNewNode();
+	 * ```
+	 */
 	public getNewNode(): string {
 		const nodes = this.nodes.filter(
 			(node: string): boolean => !this.isBanned(node),
@@ -150,10 +251,43 @@ export class APIClient {
 		return nodes[randomIndex];
 	}
 
+	/**
+	 * Tells you whether all the nodes have been banned or not.
+	 *
+	 * ### Usage Exmaple
+	 *
+	 * ```ts
+	 * const moreNodesNeeded = !client.hasAvailableNodes();
+	 * ```
+	 */
 	public hasAvailableNodes(): boolean {
 		return this.nodes.some((node: string): boolean => !this.isBanned(node));
 	}
 
+	/**
+	 * Initialises the client instance with an array of nodes and an optional configuration object.
+	 * This is called in the constructor, but can be called again later if necessary.
+	 * (Note that in practice it is usually easier just to create a new instance.)
+	 *
+	 * ### Usage Exmaple
+	 *
+	 * ```ts
+	 * client.initialize(['https://node01.lisk.io:443', 'https://node02.lisk.io:443']);
+	 * client.initialize(
+	 * ['https://node01.lisk.io:443', 'https://node02.lisk.io:443'],
+	 * {
+	 *    bannedNodes: ['https://my.faultynode.io:443'],
+	 *    client: {
+	 *       name: 'My Lisk Client',
+	 *       version: '1.2.3',
+	 *       engine: 'Some custom engine',
+	 *    },
+	 *    nethash: '9a9813156bf1d2355da31a171e37f97dfa7568187c3fd7f9c728de8f180c19c7',
+	 *    node: 'https://my.preferrednode.io:443',
+	 *    randomizeNodes: false,
+	 * });
+	 * ```
+	 */
 	public initialize(
 		nodes: ReadonlyArray<string>,
 		providedOptions: InitOptions = {},
@@ -182,6 +316,15 @@ export class APIClient {
 		this.randomizeNodes = options.randomizeNodes !== false;
 	}
 
+	/**
+	 * Tells you whether a specific node has been banned or not.
+	 *
+	 * ### Usage Exmaple
+	 *
+	 * ```ts
+	 * const banned = client.isBanned('https://node01.lisk.io:443');
+	 * ```
+	 */
 	public isBanned(node: string): boolean {
 		return this.bannedNodes.includes(node);
 	}

@@ -18,7 +18,22 @@ import { APIResource } from '../api_resource';
 import { APIHandler } from '../api_types';
 import { GET } from '../constants';
 
+/**
+ * Provides block related API endpoints.
+ */
 export class BlocksResource extends APIResource {
+	/**
+	 * Searches for a specified block in the system.
+	 *
+	 * ### Usage Example
+	 *
+	 * ```ts
+	 * client.accounts.get({ blockId: '17572751491778765213' })
+	 *   .then(res => {
+	 *     console.log(res.data);
+	 * });
+	 * ```
+	 */
 	public get: APIHandler;
 	public path: string;
 
@@ -26,16 +41,6 @@ export class BlocksResource extends APIResource {
 		super(apiClient);
 		this.path = '/blocks';
 
-		/**
-		 * Searches for a specified block in the system.
-		 *
-		 * ```ts
-		 * client.accounts.get({ blockId: '17572751491778765213' })
-		 *   .then(res => {
-		 *     console.log(res.data);
-		 * });
-		 * ```
-		 */
 		this.get = apiMethod({
 			method: GET,
 		}).bind(this);

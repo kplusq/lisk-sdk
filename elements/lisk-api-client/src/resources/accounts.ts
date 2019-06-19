@@ -19,8 +19,43 @@ import { APIHandler } from '../api_types';
 import { GET } from '../constants';
 
 export class AccountsResource extends APIResource {
+	/**
+	 * Searches for matching accounts in the system.
+	 *
+	 * ### Usage Example
+	 * ```ts
+	 * client.accounts.get({ username: 'oliver' }
+	 *   .then(res => {
+	 *     console.log(res.data);
+	 * });
+	 * ```
+	 */
 	public get: APIHandler;
+
+	/**
+	 * Searches for the specified account in the system and responds with a list of the multisignature groups that this account is a member of.
+	 *
+	 * ### Usage Example
+	 * ```ts
+	 * client.accounts.getMultisignatureGroups('15434119221255134066L')
+	 *   .then(res => {
+	 *     console.log(res.data);
+	 * });
+	 * ```
+	 */
 	public getMultisignatureGroups: APIHandler;
+
+	/**
+	 * Searches for the specified multisignature group and responds with a list of all members of this particular multisignature group.
+	 *
+	 * ### Usage Example
+	 * ```ts
+	 * client.accounts.getMultisignatureMemberships('15434119221255134066L')
+	 *   .then(res => {
+	 *     console.log(res.data);
+	 * });
+	 * ```
+	 */
 	public getMultisignatureMemberships: APIHandler;
 	public path: string;
 
@@ -28,46 +63,16 @@ export class AccountsResource extends APIResource {
 		super(apiClient);
 		this.path = '/accounts';
 
-		/**
-		 * Searches for matching accounts in the system.
-		 *
-		 * ```ts
-		 * client.accounts.get({ username: 'oliver' }
-		 *   .then(res => {
-		 *     console.log(res.data);
-		 * });
-		 * ```
-		 */
 		this.get = apiMethod({
 			method: GET,
 		}).bind(this);
 
-		/**
-		 * Searches for the specified account in the system and responds with a list of the multisignature groups that this account is a member of.
-		 *
-		 * ```ts
-		 * client.accounts.getMultisignatureGroups('15434119221255134066L')
-		 *   .then(res => {
-		 *     console.log(res.data);
-		 * });
-		 * ```
-		 */
 		this.getMultisignatureGroups = apiMethod({
 			method: GET,
 			path: '/{address}/multisignature_groups',
 			urlParams: ['address'],
 		}).bind(this);
 
-		/**
-		 * Searches for the specified multisignature group and responds with a list of all members of this particular multisignature group.
-		 *
-		 * ```ts
-		 * client.accounts.getMultisignatureMemberships('15434119221255134066L')
-		 *   .then(res => {
-		 *     console.log(res.data);
-		 * });
-		 * ```
-		 */
 		this.getMultisignatureMemberships = apiMethod({
 			method: GET,
 			path: '/{address}/multisignature_memberships',
