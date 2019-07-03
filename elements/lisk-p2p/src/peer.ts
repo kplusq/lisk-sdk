@@ -51,6 +51,7 @@ interface ClientOptionsUpdated {
 	readonly autoConnect: boolean;
 	readonly autoReconnect: boolean;
 	readonly pingTimeoutDisabled: boolean;
+	readonly pingTimeout: number;
 	readonly multiplex: boolean;
 	readonly ackTimeout?: number;
 	readonly connectTimeout?: number;
@@ -487,7 +488,8 @@ export class Peer extends EventEmitter {
 			multiplex: false,
 			autoConnect: false,
 			autoReconnect: false,
-			pingTimeoutDisabled: true,
+			pingTimeoutDisabled: false,
+			pingTimeout: 20000,
 		};
 
 		const outboundSocket = socketClusterClient.create(clientOptions);
@@ -690,7 +692,8 @@ export const connectAndRequest = async (
 				multiplex: false,
 				autoConnect: false,
 				autoReconnect: false,
-				pingTimeoutDisabled: true,
+				pingTimeoutDisabled: false,
+				pingTimeout: 20000,
 			};
 
 			const outboundSocket = socketClusterClient.create(clientOptions);
