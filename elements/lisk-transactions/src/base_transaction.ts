@@ -310,7 +310,7 @@ export abstract class BaseTransaction {
 		return createResponse(this.id, errors);
 	}
 
-	public validateFee(): TransactionError | undefined {
+	protected validateFee(): TransactionError | undefined {
 		return !this.fee.eq((this.constructor as typeof BaseTransaction).FEE)
 			? new TransactionError(
 					`Invalid fee`,

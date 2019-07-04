@@ -531,10 +531,10 @@ describe('Base transaction class', () => {
 		});
 
 		it('should call validateFee', async () => {
-			sandbox.spy(validTestTransaction, 'validateFee');
+			sandbox.spy(validTestTransaction as any, 'validateFee');
 			validTestTransaction.validate();
 
-			expect(validTestTransaction.validateFee).to.be.called;
+			expect((validTestTransaction as any).validateFee).to.be.called;
 		});
 
 		it('should return a failed transaction response with invalid signature', async () => {
@@ -588,7 +588,7 @@ describe('Base transaction class', () => {
 
 	describe('#validateFee', () => {
 		it('should return undefined if fee is valid', async () => {
-			const validFee = validTestTransaction.validateFee();
+			const validFee = (validTestTransaction as any).validateFee();
 
 			expect(validFee).to.be.undefined;
 		});
@@ -610,7 +610,7 @@ describe('Base transaction class', () => {
 				invalidTransaction as any,
 			);
 
-			const feeError = invalidTestTransaction.validateFee();
+			const feeError = (invalidTestTransaction as any).validateFee();
 
 			expect(feeError)
 				.to.be.instanceof(TransactionError)

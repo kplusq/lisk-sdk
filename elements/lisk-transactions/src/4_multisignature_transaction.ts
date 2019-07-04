@@ -210,7 +210,7 @@ export class MultisignatureTransaction extends BaseTransaction {
 		return errors;
 	}
 
-	public validateFee(): TransactionError | undefined {
+	protected validateFee(): TransactionError | undefined {
 		const expectedFee = new BigNum(MultisignatureTransaction.FEE).mul(
 			this.asset.multisignature.keysgroup.length + 1,
 		);
