@@ -339,7 +339,8 @@ class ProcessTransactions {
 
 				if (senderBalance.lt(senderSpending[senderId])) {
 					spendingErrors.push({
-						status: TransactionStatus.FatalError,
+						id: transaction.id,
+						status: TransactionStatus.FAIL,
 						errors: [
 							new TransactionError(
 								`Account does not have enough LSK for total spending. balance: ${senderBalance.toString()}, spending: ${senderSpending[
