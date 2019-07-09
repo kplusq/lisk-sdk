@@ -260,12 +260,18 @@ class ProcessTransactions {
 			stateStore
 		);
 
-		return {
-			transactionsResponses: [
-				...transactionsResponses,
-				...totalSpendingResponses,
-			],
-		};
+		totalSpendingResponses.forEach(spendingResponse => {
+			const transactionsResponse = transactionsResponses.find(
+				r => r.id === spendingResponse.id
+			);
+			transactionsResponse.status = TransactionStatus.FAIL;
+			transactionsResponse.errors = [
+				...transactionsResponse.errors,
+				...spendingResponse.errors,
+			];
+		});
+
+		return { transactionsResponses };
 	}
 
 	// eslint-disable-next-line class-methods-use-this
