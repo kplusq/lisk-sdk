@@ -99,6 +99,7 @@ interface PeerPoolConfig {
 	readonly latencyProtectionRatio: number;
 	readonly productivityProtectionRatio: number;
 	readonly longevityProtectionRatio: number;
+	readonly wsMaxMessageRate: number;
 }
 
 export const MAX_PEER_LIST_BATCH_SIZE = 100;
@@ -400,6 +401,7 @@ export class PeerPool extends EventEmitter {
 		const peerConfig = {
 			connectTimeout: this._peerPoolConfig.connectTimeout,
 			ackTimeout: this._peerPoolConfig.ackTimeout,
+			wsMaxMessageRate: this._peerPoolConfig.wsMaxMessageRate,
 		};
 		const peer = new InboundPeer(peerInfo, socket, peerConfig);
 
@@ -426,6 +428,7 @@ export class PeerPool extends EventEmitter {
 			connectTimeout: this._peerPoolConfig.connectTimeout,
 			ackTimeout: this._peerPoolConfig.ackTimeout,
 			banTime: this._peerPoolConfig.peerBanTime,
+			wsMaxMessageRate: this._peerPoolConfig.wsMaxMessageRate,
 		};
 		const peer = new OutboundPeer(peerInfo, peerConfig);
 

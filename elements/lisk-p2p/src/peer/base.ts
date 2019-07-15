@@ -135,6 +135,7 @@ export const convertNodeInfoToLegacyFormat = (
 export interface PeerConfig {
 	readonly connectTimeout?: number;
 	readonly ackTimeout?: number;
+	readonly wsMaxMessageRate: number;
 }
 
 export class Peer extends EventEmitter {
@@ -151,16 +152,22 @@ export class Peer extends EventEmitter {
 		responseRate: number;
 		lastResponded: number;
 	};
-	private _callCounter: Map<string, number>;
+	private _rpcCounter: Map<string, number>;
+	private _rpcRates: Map<any, number>;
+	private _messageCounter: Map<string, number>;
+	private _messageRates: Map<string, number>;
 	private readonly _counterResetInterval: NodeJS.Timer;
 	protected _peerInfo: P2PPeerInfo;
 	private readonly _productivityResetInterval: NodeJS.Timer;
 	protected readonly _peerConfig: PeerConfig;
 	protected _nodeInfo: P2PNodeInfo | undefined;
+	protected _wsMessageCount: number;
+	protected _wsMessageRate: number;
 	protected readonly _handleRawRPC: (
 		packet: unknown,
 		respond: (responseError?: Error, responseData?: unknown) => void,
 	) => void;
+	protected readonly _handleWSMessage: (message: string) => void;
 	protected readonly _handleRawMessage: (packet: unknown) => void;
 	protected readonly _handleRawLegacyMessagePostBlock: (
 		packet: unknown,
@@ -173,10 +180,10 @@ export class Peer extends EventEmitter {
 	) => void;
 	protected _socket: SCServerSocketUpdated | SCClientSocket | undefined;
 
-	public constructor(peerInfo: P2PPeerInfo, peerConfig?: PeerConfig) {
+	public constructor(peerInfo: P2PPeerInfo, peerConfig: PeerConfig) {
 		super();
 		this._peerInfo = peerInfo;
-		this._peerConfig = peerConfig ? peerConfig : {};
+		this._peerConfig = peerConfig;
 		this._ipAddress = peerInfo.ipAddress;
 		this._wsPort = peerInfo.wsPort;
 		this._id = constructPeerId(this._ipAddress, this._wsPort);
@@ -184,9 +191,37 @@ export class Peer extends EventEmitter {
 		this._reputation = DEFAULT_REPUTATION_SCORE;
 		this._latency = 0;
 		this._connectTime = Date.now();
-		this._callCounter = new Map();
+		this._rpcCounter = new Map();
+		this._rpcRates = new Map();
+		this._messageCounter = new Map();
+		this._messageRates = new Map();
+		this._wsMessageCount = 0;
+		this._wsMessageRate = 0;
 		this._counterResetInterval = setInterval(() => {
-			this._callCounter = new Map();
+			this._wsMessageRate = this._wsMessageCount / DEFAULT_RATE_INTERVAL;
+			this._wsMessageCount = 0;
+
+			if (this._wsMessageRate > this._peerConfig.wsMaxMessageRate) {
+				this.disconnect(FORBIDDEN_CONNECTION, FORBIDDEN_CONNECTION_REASON);
+				
+				return;
+			}
+
+			this._rpcRates = new Map(
+				[...this._rpcCounter.entries()].map((entry) => {
+					const rate = entry[1] as number / DEFAULT_RATE_INTERVAL;
+					return [entry[0], rate] as any;
+				})
+			);
+			this._rpcCounter = new Map();
+
+			this._messageRates = new Map(
+				[...this._messageCounter.entries()].map((entry) => {
+					const rate = entry[1] as number / DEFAULT_RATE_INTERVAL;
+					return [entry[0], rate] as any;
+				})
+			);
+			this._messageCounter = new Map();
 		}, DEFAULT_RATE_INTERVAL);
 		this._productivityResetInterval = setInterval(() => {
 			// If peer has not recently responded, reset productivity to 0
@@ -218,7 +253,8 @@ export class Peer extends EventEmitter {
 				return;
 			}
 
-			const rate = this._getPeerRate(packet as P2PRequestPacket);
+			this._updateRPCCounter(rawRequest);
+			const rate = this._getRPCRate(rawRequest);
 
 			const request = new P2PRequest(
 				{
@@ -240,6 +276,10 @@ export class Peer extends EventEmitter {
 			this.emit(EVENT_REQUEST_RECEIVED, request);
 		};
 
+		this._handleWSMessage = () => {
+			this._wsMessageCount++;
+		};
+
 		// This needs to be an arrow function so that it can be used as a listener.
 		this._handleRawMessage = (packet: unknown) => {
 			// TODO later: Switch to LIP protocol format.
@@ -256,7 +296,8 @@ export class Peer extends EventEmitter {
 				return;
 			}
 
-			const rate = this._getPeerRate(packet as P2PRequestPacket);
+			this._updateMessageCounter(message);
+			const rate = this._getMessageRate(message);
 			const messageWithRateInfo = {
 				...message,
 				peerId: this._id,
@@ -541,15 +582,23 @@ export class Peer extends EventEmitter {
 		this.disconnect(FORBIDDEN_CONNECTION, FORBIDDEN_CONNECTION_REASON);
 	}
 
-	private _getPeerRate(packet: unknown): number {
-		const key = (packet as P2PRequestPacket).procedure
-			? (packet as P2PRequestPacket).procedure
-			: (packet as ProtocolMessagePacket).event;
-		if (!this._callCounter.has(key)) {
-			this._callCounter.set(key, 0);
-		}
-		const callCount = (this._callCounter.get(key) as number) + 1;
+	private _updateRPCCounter(packet: P2PRequestPacket): void {
+		const key = packet.procedure;
+		const count = (this._rpcCounter.get(key) || 0) + 1;
+		this._rpcCounter.set(key, count);
+	}
 
-		return callCount / DEFAULT_RATE_INTERVAL;
+	private _getRPCRate(packet: P2PRequestPacket): number {
+		return this._rpcRates.get(packet.procedure) || 0;
+	}
+
+	private _updateMessageCounter(packet: ProtocolMessagePacket): void {
+		const key = packet.event;
+		const count = (this._messageCounter.get(key) || 0) + 1;
+		this._messageCounter.set(key, count);
+	}
+
+	private _getMessageRate(packet: ProtocolMessagePacket): number {
+		return this._messageRates.get(packet.event) || 0;
 	}
 }

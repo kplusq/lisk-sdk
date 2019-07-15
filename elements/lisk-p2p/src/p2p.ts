@@ -121,6 +121,8 @@ export const DEFAULT_DISCOVERY_INTERVAL = 30000;
 export const DEFAULT_BAN_TIME = 86400;
 export const DEFAULT_POPULATOR_INTERVAL = 10000;
 export const DEFAULT_SEND_PEER_LIMIT = 25;
+// Max rate of WebSocket messages per second per peer.
+export const DEFAULT_WS_MAX_MESSAGE_RATE = 100;
 
 const BASE_10_RADIX = 10;
 const DEFAULT_MAX_OUTBOUND_CONNECTIONS = 20;
@@ -407,6 +409,10 @@ export class P2P extends EventEmitter {
 				typeof config.longevityProtectionRatio === 'number'
 					? config.longevityProtectionRatio
 					: DEFAULT_PEER_PROTECTION_FOR_LONGEVITY,
+			wsMaxMessageRate:
+				typeof config.wsMaxMessageRate === 'number'
+					? config.wsMaxMessageRate
+					: DEFAULT_WS_MAX_MESSAGE_RATE
 		});
 
 		this._bindHandlersToPeerPool(this._peerPool);
