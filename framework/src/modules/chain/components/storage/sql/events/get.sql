@@ -13,7 +13,9 @@
  */
 
 SELECT
-	*
+	"transactionId",
+	"heightNextExecution",
+	"executionsLeft"
 FROM
 	events
 
