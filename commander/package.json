@@ -28,7 +28,7 @@
 		"lisk": "./bin/run"
 	},
 	"scripts": {
-		"start": "ts-node src/index.js",
+		"start": "ts-node src/index.ts",
 		"format": "prettier --write '**/*'",
 		"lint": "tslint --config tslint.json --format codeFrame --project .",
 		"lint:fix": "npm run lint -- --fix",
@@ -156,5 +156,8 @@
 		"tslint-config-prettier": "1.18.0",
 		"tslint-immutable": "5.1.2",
 		"typescript": "3.3.1"
+	},
+	"optionalDependencies": {
+		"ipfs": "0.36.4"
 	}
 }
