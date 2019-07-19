@@ -30,6 +30,12 @@ export interface Account {
 	readonly vote?: number;
 }
 
+export interface Event {
+	readonly interval: number;
+	readonly count: number;
+	readonly transactionId: string;
+}
+
 export interface Delegate {
 	readonly username: string;
 }

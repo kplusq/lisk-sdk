@@ -34,7 +34,7 @@ import {
 	TransactionPendingError,
 } from './errors';
 import { createResponse, Status } from './response';
-import { Account, TransactionJSON } from './transaction_types';
+import { Account, Event, TransactionJSON } from './transaction_types';
 import {
 	getId,
 	isValidNumber,
@@ -74,6 +74,9 @@ export interface StateStore {
 		StateStoreDefaultGetter<Account> &
 		StateStoreSetter<Account>;
 	readonly transaction: StateStoreGetter<TransactionJSON>;
+	readonly event: StateStoreGetter<Event> &
+		StateStoreDefaultGetter<Event> &
+		StateStoreSetter<Event>;
 }
 
 export interface StateStoreCache<T> {
@@ -85,6 +88,7 @@ export interface StateStoreCache<T> {
 export interface StateStorePrepare {
 	readonly account: StateStoreCache<Account>;
 	readonly transaction: StateStoreCache<TransactionJSON>;
+	readonly event: StateStoreCache<Event>;
 }
 
 export enum MultisignatureStatus {
