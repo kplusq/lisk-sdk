@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { flags as flagParser } from '@oclif/command';
 import BaseCommand from '../../base';
 // tslint:disable-next-line: no-require-imports
 const ipfsClient = require('ipfs-http-client');
@@ -8,7 +9,27 @@ class PackagePublishCommand extends BaseCommand {
 
 	static examples = ['package:publish'];
 
+	static flags = {
+		...BaseCommand.flags,
+		endpoint: flagParser.string({
+			description: 'Endpoint url to connect.',
+			default: 'ipfs.infura.io',
+		}),
+		port: flagParser.string({
+			description: 'Endpoint port.',
+			default: '5001',
+		}),
+		protocol: flagParser.string({
+			description: 'Protocol.',
+			default: 'https',
+		}),
+	};
+
 	async run(): Promise<void> {
+		const {
+			flags: { endpoint, port, protocol },
+		} = this.parse(PackagePublishCommand);
+
 		const workingDirectory = process.cwd();
 
 		const pkg = require(path.join(workingDirectory, './package.json'));
@@ -18,24 +39,24 @@ class PackagePublishCommand extends BaseCommand {
 				'package.json not found. Please run the command in the root folder',
 			);
 		}
-		const ipfs = ipfsClient('ipfs.infura.io', '5001', { protocol: 'https' });
 
-		const version = await ipfs.version();
+		console.log({ endpoint, port, protocol });
 
-		console.log('Version:', version.version);
+		const ipfs = ipfsClient(endpoint, port, { protocol });
 
-		const filesAdded = await ipfs.addFromFs(
-			path.join(workingDirectory, './bin'),
-			{
-				recursive: true,
-			},
-		);
+		const filesAdded = await ipfs.addFromFs(workingDirectory, {
+			recursive: true,
+			ignore: [
+				'src/**',
+				'test/**',
+				'node_modules/**',
+				'tslint.json',
+				'tsconfig.json',
+			],
+		});
 
 		console.log('Added files:', filesAdded);
-
-		const fileBuffer = await ipfs.cat(filesAdded[1].hash);
-
-		console.log('Added file contents:', fileBuffer.toString());
+		console.log('Last Item:', filesAdded.reverse()[0]);
 	}
 }
 

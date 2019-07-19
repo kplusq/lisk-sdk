@@ -92,11 +92,8 @@
 		}
 	},
 	"files": [
-		"/bin",
-		"/npm-shrinkwrap.json",
-		"/oclif.manifest.json",
-		"/dist",
-		"/docs"
+		"./bin",
+		"./dist"
 	],
 	"dependencies": {
 		"@liskhq/lisk-api-client": "2.0.1",
