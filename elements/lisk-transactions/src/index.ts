@@ -25,6 +25,7 @@ import { MultisignatureTransaction } from './4_multisignature_transaction';
 import { registerMultisignature } from './4_register_multisignature_account';
 import { createDapp } from './5_create_dapp';
 import { DappTransaction } from './5_dapp_transaction';
+import { EventTransaction } from './11_event_payback_transaction';
 import {
 	BaseTransaction,
 	StateStore,
@@ -104,6 +105,7 @@ export {
 	SecondSignatureTransaction,
 	registerSecondPassphrase,
 	DelegateTransaction,
+	EventTransaction,
 	registerDelegate,
 	VoteTransaction,
 	castVotes,

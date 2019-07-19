@@ -15,6 +15,9 @@
 'use strict';
 
 const app = require('./app');
+const { EventTransaction } = require('../../../elements/lisk-transactions');
+
+app.registerTransaction(EventTransaction);
 
 app
 	.run()
