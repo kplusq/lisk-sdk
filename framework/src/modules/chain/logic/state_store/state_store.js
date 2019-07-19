@@ -17,6 +17,7 @@
 const AccountStore = require('./account_store');
 const TransactionStore = require('./transaction_store');
 const RoundStore = require('./round_store');
+const EventStore = require('./event_store');
 
 class StateStore {
 	constructor(storage, options) {
@@ -24,11 +25,13 @@ class StateStore {
 			Account: storage.entities.Account,
 			Transaction: storage.entities.Transaction,
 			Round: storage.entities.Round,
+			Event: storage.entities.Event,
 		};
 
 		this.account = new AccountStore(this.entities.Account, options);
 		this.round = new RoundStore(this.entities.Round, options);
 		this.transaction = new TransactionStore(this.entities.Transaction, options);
+		this.event = new EventStore(this.entities.Event, options);
 	}
 
 	createSnapshot() {

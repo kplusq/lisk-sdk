@@ -75,8 +75,8 @@ export class EventTransaction extends BaseTransaction {
 	}
 
 	public async prepare(store: StateStorePrepare): Promise<void> {
-		Promise.all([
-			await store.account.cache([
+		await Promise.all([
+			store.account.cache([
 				{
 					address: this.senderId,
 				},
@@ -84,7 +84,7 @@ export class EventTransaction extends BaseTransaction {
 					address: this.recipientId,
 				},
 			]),
-			await store.event.cache([
+			store.event.cache([
 				{
 					transactionId: this.id,
 				},
@@ -219,7 +219,6 @@ export class EventTransaction extends BaseTransaction {
 				};
 				store.event.set(this.id, event);
 			}
-			errors.push(e);
 		}
 
 		return errors;
