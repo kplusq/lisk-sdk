@@ -15,8 +15,8 @@
 
 'use strict';
 
-const { EventTransaction } = require('@liskhq/lisk-transactions');
 const { APIClient } = require('@liskhq/lisk-api-client');
+const { EventTransaction } = require('@liskhq/lisk-transactions');
 
 const client = new APIClient(['http://localhost:4000']);
 
@@ -34,6 +34,7 @@ tx.sign(
 );
 
 const run = async () => {
+	console.log(`Sending Event transaction - ${tx.stringify()}`);
 	await client.transactions.broadcast(tx.toJSON());
 };
 
