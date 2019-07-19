@@ -15,6 +15,7 @@
 import * as BigNum from '@liskhq/bignum';
 import { transfer } from './0_transfer';
 import { TransferTransaction } from './0_transfer_transaction';
+import { EventTransaction } from './11_event_payback_transaction';
 import { registerSecondPassphrase } from './1_register_second_passphrase';
 import { SecondSignatureTransaction } from './1_second_signature_transaction';
 import { DelegateTransaction } from './2_delegate_transaction';
@@ -25,7 +26,6 @@ import { MultisignatureTransaction } from './4_multisignature_transaction';
 import { registerMultisignature } from './4_register_multisignature_account';
 import { createDapp } from './5_create_dapp';
 import { DappTransaction } from './5_dapp_transaction';
-import { EventTransaction } from './11_event_payback_transaction';
 import {
 	BaseTransaction,
 	StateStore,

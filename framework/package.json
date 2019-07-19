@@ -48,6 +48,7 @@
 		"docs:serve": "http-server docs/jsdoc/"
 	},
 	"dependencies": {
+		"@liskhq/lisk-api-client": "2.0.1",
 		"@liskhq/lisk-cryptography": "2.1.0",
 		"@liskhq/lisk-p2p": "0.1.1",
 		"@liskhq/lisk-transaction-pool": "0.1.1",

@@ -11,23 +11,32 @@
  *
  * Removal or modification of this copyright notice is prohibited.
  */
+/* eslint-disable no-console */
 
 'use strict';
 
 const { EventTransaction } = require('@liskhq/lisk-transactions');
-const app = require('./app');
+const { APIClient } = require('@liskhq/lisk-api-client');
 
-app.registerTransaction(EventTransaction);
+const client = new APIClient(['http://localhost:4000']);
 
-app
-	.run()
-	.then(() => app.logger.info('App started...'))
-	.catch(error => {
-		if (error instanceof Error) {
-			app.logger.error('App stopped with error', error.message);
-			app.logger.debug(error.stack);
-		} else {
-			app.logger.error('App stopped with error', error);
-		}
-		process.exit();
-	});
+const tx = new EventTransaction({
+	recipientId: '123L',
+	amount: '100000000',
+	asset: {
+		interval: 10,
+		count: 100,
+	},
+});
+
+tx.sign(
+	'wagon stock borrow episode laundry kitten salute link globe zero feed marble'
+);
+
+const run = async () => {
+	await client.transactions.broadcast(tx.toJSON());
+};
+
+run()
+	.then(console.log)
+	.catch(console.error);
