@@ -25,7 +25,7 @@ const tx = new EventTransaction({
 	amount: '100000000',
 	asset: {
 		interval: 10,
-		count: 100,
+		executionsLeft: 100,
 	},
 });
 

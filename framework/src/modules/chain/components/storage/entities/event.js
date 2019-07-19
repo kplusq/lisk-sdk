@@ -28,6 +28,7 @@ const defaultCreateValues = {
 	transactionId: null,
 	heightNextExecution: null,
 	executionsLeft: null,
+	interval: null,
 };
 
 const readOnlyFields = ['transactionId'];

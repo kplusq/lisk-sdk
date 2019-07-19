@@ -32,7 +32,7 @@ export interface Account {
 
 export interface Event {
 	readonly interval: number;
-	readonly count: number;
+	readonly executionsLeft: number;
 	readonly transactionId: string;
 }
 
