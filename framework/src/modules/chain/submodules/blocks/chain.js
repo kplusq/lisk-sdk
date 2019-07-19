@@ -363,6 +363,7 @@ __private.applyConfirmedStep = async function(block, tx) {
 	await stateStore.account.finalize();
 	stateStore.round.setRoundForData(slots.calcRound(block.height));
 	await stateStore.round.finalize();
+	await stateStore.event.finalize();
 };
 
 /**
@@ -535,6 +536,7 @@ __private.undoConfirmedStep = async function(block, tx) {
 	stateStore.round.setRoundForData(slots.calcRound(block.height));
 
 	await stateStore.round.finalize();
+	await stateStore.event.finalize();
 };
 
 /**
