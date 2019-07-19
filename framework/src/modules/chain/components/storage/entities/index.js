@@ -17,6 +17,7 @@
 module.exports = {
 	Account: require('./account'),
 	Block: require('./block'),
+	Event: require('./event'),
 	Migration: require('./migration'),
 	Round: require('./round'),
 	Transaction: require('./transaction'),
