@@ -88,7 +88,7 @@ class Event extends BaseEntity {
 		this.addField('heightNextExecution', 'number', { filter: NUMBER });
 		this.addField('executionsLeft', 'number', { filter: NUMBER });
 
-		const defaultSort = { sort: 'heightNextExecution:desc' };
+		const defaultSort = { sort: 'id:asc' };
 		this.extendDefaultOptions(defaultSort);
 
 		this.sqlDirectory = path.join(path.dirname(__filename), '../sql');

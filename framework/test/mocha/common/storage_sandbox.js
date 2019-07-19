@@ -25,6 +25,7 @@ const {
 const {
 	Account,
 	Block,
+	Event,
 	Migration,
 	Round,
 	Transaction,
@@ -92,6 +93,7 @@ class StorageSandbox extends Storage {
 		this.registerEntity('Transaction', Transaction);
 
 		// Custom entitties
+		this.registerEntity('Event', Event);
 		this.registerEntity('Migration', Migration);
 		this.registerEntity('Peer', Peer);
 		this.registerEntity('Round', Round);

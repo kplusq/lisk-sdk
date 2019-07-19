@@ -17,6 +17,7 @@
 const {
 	Account,
 	Block,
+	Event,
 	Migration,
 	Round,
 	Transaction,
@@ -30,6 +31,7 @@ module.exports = async ({ components: { storage, logger } }, accountLimit) => {
 		storage.registerEntity('Block', Block, {
 			replaceExisting: true,
 		});
+		storage.registerEntity('Event', Event);
 		storage.registerEntity('Migration', Migration);
 		storage.registerEntity('Round', Round);
 		storage.registerEntity('Transaction', Transaction, {
