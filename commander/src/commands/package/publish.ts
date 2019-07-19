@@ -1,6 +1,7 @@
 import * as path from 'path';
 import BaseCommand from '../../base';
-import { isIPFSInstalled } from '../../utils/package';
+// tslint:disable-next-line: no-require-imports
+const ipfsClient = require('ipfs-http-client');
 
 class PackagePublishCommand extends BaseCommand {
 	static description = 'Publishes a package to IPFS.';
@@ -8,10 +9,6 @@ class PackagePublishCommand extends BaseCommand {
 	static examples = ['package:publish'];
 
 	async run(): Promise<void> {
-		if (!isIPFSInstalled()) {
-			throw new Error('Please install IPFS');
-		}
-
 		const workingDirectory = process.cwd();
 
 		const pkg = require(path.join(workingDirectory, './package.json'));
@@ -21,32 +18,24 @@ class PackagePublishCommand extends BaseCommand {
 				'package.json not found. Please run the command in the root folder',
 			);
 		}
+		const ipfs = ipfsClient('ipfs.infura.io', '5001', { protocol: 'https' });
 
-		// tslint:disable-next-line: no-require-imports
-		const IPFS = require('ipfs');
+		const version = await ipfs.version();
 
-		const node = new IPFS();
+		console.log('Version:', version.version);
 
-		node.on('ready', async () => {
-			const version = await node.version();
+		const filesAdded = await ipfs.addFromFs(
+			path.join(workingDirectory, './bin'),
+			{
+				recursive: true,
+			},
+		);
 
-			console.log('Version:', version.version);
+		console.log('Added files:', filesAdded);
 
-			const filesAdded = await node.addFromFs(
-				path.join(workingDirectory, './bin'),
-				{
-					recursive: true,
-				},
-			);
+		const fileBuffer = await ipfs.cat(filesAdded[1].hash);
 
-			console.log('Added files:', filesAdded);
-
-			const fileBuffer = await node.cat(filesAdded[1].hash);
-
-			console.log('Added file contents:', fileBuffer.toString());
-
-			await node.stop();
-		});
+		console.log('Added file contents:', fileBuffer.toString());
 	}
 }
 

@@ -114,6 +114,7 @@
 		"cli-table3": "0.5.0",
 		"fs-extra": "7.0.1",
 		"inquirer": "6.2.0",
+		"ipfs-http-client": "^33.1.0",
 		"listr": "0.14.3",
 		"lockfile": "1.0.4",
 		"pm2": "3.5.0",
@@ -156,8 +157,5 @@
 		"tslint-config-prettier": "1.18.0",
 		"tslint-immutable": "5.1.2",
 		"typescript": "3.3.1"
-	},
-	"optionalDependencies": {
-		"ipfs": "0.36.4"
 	}
 }
