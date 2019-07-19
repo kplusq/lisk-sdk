@@ -72,7 +72,7 @@ class EventStore {
 	}
 
 	// eslint-disable no-await-in-loop
-	async finalize() {
+	async finalize(height) {
 		if (!this.mutate) {
 			throw new Error(
 				'Cannot finalize when store is initialized with mutate = false'
@@ -80,15 +80,22 @@ class EventStore {
 		}
 
 		// eslint-disable-next-line
-		for (const { key, val } of this.data) {
+		for (const key of Object.keys(this.data)) {
+			const val = this.data[key];
+			const updated = {
+				...val,
+				heightNextExecution: val.heightNextExecution
+					? val.heightNextExecution + val.interval
+					: height + val.interval,
+			};
 			// eslint-disable-next-line
 			const isPersisted = await this.event.isPersisted({ transactionId: key });
 			if (isPersisted) {
 				// eslint-disable-next-line
-				await this.event.create({ transactionId: key }, val);
+				await this.event.update({ transactionId: key }, updated);
 			} else {
 				// eslint-disable-next-line
-				await this.event.create(val);
+				await this.event.create(updated);
 			}
 		}
 	}
