@@ -22,5 +22,6 @@ CREATE TABLE IF NOT EXISTS "events"(
   "id" SERIAL NOT NULL,
   "transactionId" VARCHAR(20) NOT NULL,
   "heightNextExecution" INT NOT NULL,
+  "interval" INT NOT NULL,
   "executionsLeft" INT NOT NULL
 );

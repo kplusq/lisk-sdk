@@ -82,18 +82,22 @@ class EventStore {
 		// eslint-disable-next-line
 		for (const key of Object.keys(this.data)) {
 			const val = this.data[key];
-			const updated = {
-				...val,
-				heightNextExecution: val.heightNextExecution
-					? val.heightNextExecution + val.interval
-					: height + val.interval,
-			};
+
 			// eslint-disable-next-line
 			const isPersisted = await this.event.isPersisted({ transactionId: key });
 			if (isPersisted) {
+				const updated = {
+					...val,
+					executionLeft: val.executionLeft - 1,
+					heightNextExecution: val.heightNextExecution + val.interval,
+				};
 				// eslint-disable-next-line
 				await this.event.update({ transactionId: key }, updated);
 			} else {
+				const updated = {
+					...val,
+					heightNextExecution: height + val.interval,
+				};
 				// eslint-disable-next-line
 				await this.event.create(updated);
 			}

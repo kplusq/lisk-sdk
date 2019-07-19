@@ -24,7 +24,7 @@ const tx = new EventTransaction({
 	recipientId: '123L',
 	amount: '100000000',
 	asset: {
-		interval: 10,
+		interval: 1,
 		executionsLeft: 100,
 	},
 });

@@ -360,6 +360,24 @@ __private.applyConfirmedStep = async function(block, tx) {
 		throw unappliableTransactionsResponse[0].errors;
 	}
 
+	// execute event
+	const events = await library.storage.entities.Event.get({
+		heightNextExecution: block.height,
+	});
+	// eslint-disable-next-line
+	for (const e of events) {
+		stateStore.event.set(e.transactionId, e);
+		// eslint-disable-next-line
+		const txObj = await library.storage.entities.Transaction.getOne({
+			id: e.transactionId,
+		});
+		const transaction = library.logic.initTransaction.fromJson(txObj);
+		// eslint-disable-next-line
+		await transaction.prepare(stateStore);
+		// eslint-disable-next-line
+		await transaction.apply(stateStore);
+	}
+
 	await stateStore.account.finalize();
 	stateStore.round.setRoundForData(slots.calcRound(block.height));
 	await stateStore.round.finalize();
