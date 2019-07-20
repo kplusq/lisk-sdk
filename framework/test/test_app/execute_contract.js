@@ -16,7 +16,10 @@
 'use strict';
 
 const { APIClient } = require('@liskhq/lisk-api-client');
-const { ContractTransaction, BalanceContractTransaction } = require('../../../elements/lisk-transactions');
+const {
+	ContractTransaction,
+	BalanceContractTransaction,
+} = require('../../../elements/lisk-transactions');
 
 const client = new APIClient(['http://localhost:4000']);
 
@@ -24,11 +27,9 @@ const txRegisterContract = new ContractTransaction({
 	recipientId: '123L',
 	asset: {
 		contract: `
-			if (sender.balance > 30000000 + transaction.asset.burnAmount + 100000000 + transaction.amount) {
-				transfer('0L', transaction.asset.burnAmount);
-				transfer('10L', '100000000');
-				transfer('100L', transaction.amount);
-			}
+			transfer('0L', transaction.asset.burnAmount);
+			transfer('10L', '100000000');
+			transfer('100L', transaction.amount);
 		`,
 	},
 });
@@ -50,11 +51,15 @@ txCallContract.sign(
 );
 
 const run = async () => {
-	console.log(`Sending contract register transaction - ${txRegisterContract.stringify()}`);
-	// await client.transactions.broadcast(txRegisterContract.toJSON());
+	console.log(
+		`Sending contract register transaction - ${txRegisterContract.stringify()}`
+	);
+	await client.transactions.broadcast(txRegisterContract.toJSON());
 
-	console.log(`\n \n \n Sending contract call transaction - ${txCallContract.stringify()}`);
-	// await client.transactions.broadcast(txCallContract.toJSON());
+	console.log(
+		`\n \n \n Sending contract call transaction - ${txCallContract.stringify()}`
+	);
+	await client.transactions.broadcast(txCallContract.toJSON());
 };
 
 run()

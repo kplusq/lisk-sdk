@@ -61,24 +61,17 @@ export class ContractTransaction extends BaseTransaction {
 
 		const contractBuffer = Buffer.from(contract.toString(), 'hex');
 
-		return Buffer.concat([
-			new Uint8Array(contractBuffer),
-		]);
+		return Buffer.concat([new Uint8Array(contractBuffer)]);
 	}
 
-	public async prepare(store: StateStorePrepare): Promise<void> {
-		Promise.all([
+	public async prepare(store: statestoreprepare): promise<void> {
+		promise.all([
 			await store.account.cache([
 				{
-					address: this.senderId,
+					address: this.senderid,
 				},
 				{
-					address: this.recipientId,
-				},
-			]),
-			await store.event.cache([
-				{
-					transactionId: this.id,
+					address: this.recipientid,
 				},
 			]),
 		]);
@@ -147,7 +140,6 @@ export class ContractTransaction extends BaseTransaction {
 		const recipient = store.account.getOrDefault(this.recipientId);
 
 		if (recipient.asset.contract) {
-
 			errors.push(
 				new TransactionError(
 					'You cannot really change the contract you made with others',
@@ -169,7 +161,7 @@ export class ContractTransaction extends BaseTransaction {
 
 	protected undoAsset(store: StateStore): ReadonlyArray<TransactionError> {
 		const errors: TransactionError[] = [];
-		
+
 		const recipient = store.account.getOrDefault(this.recipientId);
 
 		recipient.asset.contract = null;
