@@ -28,6 +28,7 @@ const defaultCreateValues = {
 	transactionId: null,
 	heightNextExecution: null,
 	executionsLeft: null,
+	interval: null,
 };
 
 const readOnlyFields = ['transactionId'];
@@ -87,6 +88,7 @@ class Event extends BaseEntity {
 		this.addField('transactionId', 'string', { filter: TEXT });
 		this.addField('heightNextExecution', 'number', { filter: NUMBER });
 		this.addField('executionsLeft', 'number', { filter: NUMBER });
+		this.addField('interval', 'number', { filter: NUMBER });
 
 		const defaultSort = { sort: 'id:asc' };
 		this.extendDefaultOptions(defaultSort);

@@ -336,9 +336,6 @@ __private.applyGenesisTransactions = function(transactions, cb) {
  * @returns {Promise<reject|resolve>}
  */
 __private.applyConfirmedStep = async function(block, tx) {
-	if (block.transactions.length <= 0) {
-		return;
-	}
 	const nonInertTransactions = block.transactions.filter(
 		transaction =>
 			!checkTransactionExceptions.checkIfTransactionIsInert(transaction)
@@ -360,9 +357,30 @@ __private.applyConfirmedStep = async function(block, tx) {
 		throw unappliableTransactionsResponse[0].errors;
 	}
 
+	// execute event
+	const events = await library.storage.entities.Event.get({});
+	// eslint-disable-next-line
+	for (const e of events) {
+		stateStore.event.set(e.transactionId, e);
+		e.interval = 1;
+		// eslint-disable-next-line
+		const txObj = await library.storage.entities.Transaction.getOne(
+			{
+				id: e.transactionId,
+			},
+			{ extended: true }
+		);
+		const transaction = library.logic.initTransaction.fromJson(txObj);
+		// eslint-disable-next-line
+		await transaction.prepare(stateStore);
+		// eslint-disable-next-line
+		await transaction.apply(stateStore);
+	}
+
 	await stateStore.account.finalize();
 	stateStore.round.setRoundForData(slots.calcRound(block.height));
 	await stateStore.round.finalize();
+	await stateStore.event.finalize(block.height);
 };
 
 /**
@@ -535,6 +553,7 @@ __private.undoConfirmedStep = async function(block, tx) {
 	stateStore.round.setRoundForData(slots.calcRound(block.height));
 
 	await stateStore.round.finalize();
+	await stateStore.event.finalize();
 };
 
 /**

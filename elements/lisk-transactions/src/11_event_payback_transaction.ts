@@ -32,7 +32,7 @@ import {
 
 export interface EventTransactionAsset {
 	readonly interval: number;
-	readonly count: number;
+	readonly executionsLeft: number;
 }
 
 export const eventAssetFormatSchema = {
@@ -41,7 +41,7 @@ export const eventAssetFormatSchema = {
 		interval: {
 			type: 'number',
 		},
-		count: {
+		executionsLeft: {
 			type: 'number',
 		},
 	},
@@ -62,11 +62,11 @@ export class EventTransaction extends BaseTransaction {
 	}
 
 	protected assetToBytes(): Buffer {
-		const { interval, count } = this.asset;
+		const { interval, executionsLeft } = this.asset;
 		const hexNumbers = 16;
 
 		const intervalBuffer = Buffer.from(interval.toString(hexNumbers), 'hex');
-		const countBuffer = Buffer.from(count.toString(hexNumbers), 'hex');
+		const countBuffer = Buffer.from(executionsLeft.toString(hexNumbers), 'hex');
 
 		return Buffer.concat([
 			new Uint8Array(intervalBuffer),
@@ -75,8 +75,8 @@ export class EventTransaction extends BaseTransaction {
 	}
 
 	public async prepare(store: StateStorePrepare): Promise<void> {
-		Promise.all([
-			await store.account.cache([
+		await Promise.all([
+			store.account.cache([
 				{
 					address: this.senderId,
 				},
@@ -84,7 +84,7 @@ export class EventTransaction extends BaseTransaction {
 					address: this.recipientId,
 				},
 			]),
-			await store.event.cache([
+			store.event.cache([
 				{
 					transactionId: this.id,
 				},
@@ -208,18 +208,13 @@ export class EventTransaction extends BaseTransaction {
 			// Check if the event exists, if it does, don't do anything, if it doesn't create the entry
 			store.event.get(this.id);
 		} catch (e) {
-			if (
-				e.message === `event with transactionId = ${this.id} does not exist`
-			) {
-				// First time, so we are creating an entry in the events table
-				const event = {
-					transactionId: this.id,
-					interval: this.asset.interval,
-					count: this.asset.count,
-				};
-				store.event.set(this.id, event);
-			}
-			errors.push(e);
+			// First time, so we are creating an entry in the events table
+			const event = {
+				transactionId: this.id,
+				interval: this.asset.interval,
+				executionsLeft: this.asset.executionsLeft,
+			};
+			store.event.set(this.id, event);
 		}
 
 		return errors;
@@ -269,8 +264,8 @@ export class EventTransaction extends BaseTransaction {
 		store.event.get(this.id);
 		const revertEvent = {
 			transactionId: this.id,
-			count: 0,
 			interval: 0,
+			executionsLeft: this.asset.executionsLeft,
 		};
 		store.event.set(this.id, revertEvent);
 
@@ -284,7 +279,7 @@ export class EventTransaction extends BaseTransaction {
 
 			return {
 				interval: raw.interval,
-				count: raw.count,
+				executionsLeft: raw.executionsLeft,
 			};
 		}
 
