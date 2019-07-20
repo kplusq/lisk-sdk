@@ -14,10 +14,12 @@
 
 'use strict';
 
-const { EventTransaction } = require('@liskhq/lisk-transactions');
+const { EventTransaction, ContractTransaction, BalanceContractTransaction } = require('@liskhq/lisk-transactions');
 const app = require('./app');
 
 app.registerTransaction(EventTransaction);
+app.registerTransaction(ContractTransaction);
+app.registerTransaction(BalanceContractTransaction);
 
 app
 	.run()

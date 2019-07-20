@@ -16,7 +16,7 @@
 'use strict';
 
 const { APIClient } = require('@liskhq/lisk-api-client');
-const { EventTransaction } = require('@liskhq/lisk-transactions');
+const { EventTransaction } = require('../../../elements/lisk-transactions');
 
 const client = new APIClient(['http://localhost:4000']);
 

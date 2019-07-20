@@ -16,6 +16,8 @@ import * as BigNum from '@liskhq/bignum';
 import { transfer } from './0_transfer';
 import { TransferTransaction } from './0_transfer_transaction';
 import { EventTransaction } from './11_event_payback_transaction';
+import { ContractTransaction } from './12_contract_transaction';
+import { BalanceContractTransaction } from './13_balance_contract_transaction';
 import { registerSecondPassphrase } from './1_register_second_passphrase';
 import { SecondSignatureTransaction } from './1_second_signature_transaction';
 import { DelegateTransaction } from './2_delegate_transaction';
@@ -106,6 +108,8 @@ export {
 	registerSecondPassphrase,
 	DelegateTransaction,
 	EventTransaction,
+	ContractTransaction,
+	BalanceContractTransaction,
 	registerDelegate,
 	VoteTransaction,
 	castVotes,
