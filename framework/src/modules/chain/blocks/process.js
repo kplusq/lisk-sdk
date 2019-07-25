@@ -17,7 +17,6 @@
 const { Status: TransactionStatus } = require('@liskhq/lisk-transactions');
 const blocksUtils = require('./utils');
 const blocksLogic = require('./block');
-const blockVersion = require('./block_version');
 const transactionsModule = require('../transactions');
 
 class BlocksProcess {
@@ -125,7 +124,7 @@ class BlocksProcess {
 			prevotedConfirmedUptoHeight: 1,
 			maxHeightPreviouslyForged: 1,
 			height: lastBlock.height + 1,
-			version: blockVersion.getBlockVersion(lastBlock.height + 1),
+			exceptions: this.exceptions,
 		});
 	}
 

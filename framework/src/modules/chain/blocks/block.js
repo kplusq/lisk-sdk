@@ -25,10 +25,17 @@ const createFunc = {
 };
 
 const create = data => {
-	const version =
-		data.version ||
-		getBlockVersion(data.previousBlock.height + 1, data.exceptions);
-	return createFunc[version](data);
+	const version = Number.isInteger(Number(data.version))
+		? data.version
+		: getBlockVersion(data.previousBlock.height + 1, data.exceptions);
+	const block = createFunc[version](data);
+	return block;
+};
+
+const sortTransactions = {
+	0: blockV1.sortTransactions,
+	1: blockV1.sortTransactions,
+	2: blockV2.sortTransactions,
 };
 
 const getBytesFunc = {
@@ -99,4 +106,5 @@ module.exports = {
 	getBytes,
 	verifySignature,
 	objectNormalize,
+	sortTransactions,
 };

@@ -143,8 +143,10 @@ class BlocksTransactionsHelper {
 			// Amounts have to be instances of BigNum for sorting
 			.map(t => transactionInterfaceAdapter.fromJson(t.data));
 
-		// Sort transactions the same way as they are sorted in a block
-		const sortedTransactions = blocksLogic.sortTransactions(validTransactions);
+		// Sort transactions the same way as they are sorted in a block based on version 1
+		const sortedTransactions = blocksLogic.sortTransactions[1](
+			validTransactions
+		);
 
 		// We return only transaction ID, amount (in string format), sender and recipient
 		return sortedTransactions.map(formatTransaction);
@@ -225,6 +227,8 @@ class BlocksTransactionsHelper {
 			previousBlock: lastBlock,
 			transactions,
 			maxPayloadLength: constants.MAX_PAYLOAD_LENGTH,
+			prevotedConfirmedUptoHeight: 1,
+			maxHeightPreviouslyForged: 1,
 			exceptions,
 		});
 	}
