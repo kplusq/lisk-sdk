@@ -24,4 +24,4 @@ export const getBucket = (
 	_secret: number,
 	_bucketSize: number,
 	// tslint:disable-next-line:no-magic-numbers
-): number => Math.floor(Math.random() * 64);
+): number => Math.floor(Math.random() * 32);
