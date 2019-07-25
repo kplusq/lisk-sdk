@@ -169,27 +169,14 @@ const getBytes = block => {
 };
 
 /**
- * Sorts input data transactions.
- * Calculates reward based on previous block data.
- * Generates new block.
+ * Sorts transactions for later including in the block.
  *
- * @param {Object} data
- * @returns {block} block
- * @todo Add description for the params
+ * @param {Array} transactions Unsorted collection of transactions
+ * @returns {Array} transactions Sorted collection of transactions
+ * @static
  */
-const create = ({
-	blockReward,
-	transactions,
-	previousBlock,
-	keypair,
-	timestamp,
-	maxPayloadLength,
-	maxHeightPreviouslyForged,
-	prevotedConfirmedUptoHeight,
-	exceptions,
-}) => {
-	// TODO: move to transactions module logic
-	const sortedTransactions = transactions.sort((a, b) => {
+const sortTransactions = transactions =>
+	transactions.sort((a, b) => {
 		// Place MULTI transaction after all other transaction types
 		if (
 			a.type === TRANSACTION_TYPES_MULTI &&
@@ -221,6 +208,28 @@ const create = ({
 		return 0;
 	});
 
+/**
+ * Sorts input data transactions.
+ * Calculates reward based on previous block data.
+ * Generates new block.
+ *
+ * @param {Object} data
+ * @returns {block} block
+ * @todo Add description for the params
+ */
+const create = ({
+	blockReward,
+	transactions,
+	previousBlock,
+	keypair,
+	timestamp,
+	maxPayloadLength,
+	maxHeightPreviouslyForged,
+	prevotedConfirmedUptoHeight,
+	exceptions,
+}) => {
+	// TODO: move to transactions module logic
+	const sortedTransactions = sortTransactions(transactions);
 	const nextHeight = previousBlock ? previousBlock.height + 1 : 1;
 
 	const reward = blockReward.calculateReward(nextHeight);
@@ -514,4 +523,5 @@ module.exports = {
 	getHash,
 	objectNormalize,
 	sign,
+	sortTransactions,
 };

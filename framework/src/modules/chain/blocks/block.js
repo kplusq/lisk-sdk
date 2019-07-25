@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Lisk Foundation
+ * Copyright © 2019 Lisk Foundation
  *
  * See the LICENSE file at the top-level directory of this distribution
  * for licensing information.
@@ -36,6 +36,7 @@ const getBytesFunc = {
 	1: blockV1.getBytes,
 	2: blockV2.getBytes,
 };
+
 const getBytes = block => getBytesFunc[block.version](block);
 
 const dbReadFunc = {

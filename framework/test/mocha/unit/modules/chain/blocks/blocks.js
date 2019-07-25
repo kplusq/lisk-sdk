@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Lisk Foundation
+ * Copyright © 2019 Lisk Foundation
  *
  * See the LICENSE file at the top-level directory of this distribution
  * for licensing information.
@@ -121,6 +121,7 @@ describe('blocks', () => {
 			blockSlotWindow: __testContext.config.constants.BLOCK_SLOT_WINDOW,
 			totalAmount: __testContext.config.constants.TOTAL_AMOUNT,
 		});
+		sinonSandbox.spy(blocksInstance, 'emit');
 	});
 
 	afterEach(async () => {
@@ -443,7 +444,6 @@ describe('blocks', () => {
 					timestamp: 5440768,
 					generatorPublicKey: 'a1',
 				});
-				expect(loggerStub.warn).to.be.calledOnce;
 			});
 		});
 	});
@@ -910,6 +910,14 @@ describe('blocks', () => {
 			await blocksInstance._processReceivedBlock(block);
 			expect(blocksInstance._lastBlock).to.equal(block);
 			expect(blocksInstance._isActive).to.be.false;
+		});
+
+		it('should emit EVENT_NEW_BLOCK with block', async () => {
+			await blocksInstance._processReceivedBlock(block);
+			expect(blocksInstance.emit).to.have.been.calledOnceWith(
+				'EVENT_NEW_BLOCK',
+				{ block }
+			);
 		});
 
 		it('should error log that apply the new received block failed with the error', async () => {
