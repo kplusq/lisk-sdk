@@ -35,7 +35,7 @@ export class BalanceContractTransaction extends TransferTransaction {
 			sender,
 			recipient,
 			transaction: this,
-			transfer: (to: string, amount: string) => {
+			transfer: (to, amount) => {
 				this.apply.bind({...this, 
 					id: this.id, 
 					senderId: this.senderId, 
